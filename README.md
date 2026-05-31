@@ -17,9 +17,3 @@ Small desktop app to mark funny or important moments during a Twitch stream.
 pnpm install
 pnpm tauri dev
 ```
-
-## How to build
-
-```bash
-pnpm tauri build
-```
