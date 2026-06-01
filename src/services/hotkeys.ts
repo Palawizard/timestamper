@@ -30,3 +30,10 @@ export function registerStartStopHotkey(
 ): Promise<HotkeyCleanup> {
   return registerHotkey(shortcut, handler);
 }
+
+export function registerAddMarkHotkey(
+  shortcut: string,
+  handler: HotkeyHandler,
+): Promise<HotkeyCleanup> {
+  return registerHotkey(shortcut, handler);
+}
