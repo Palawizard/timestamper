@@ -23,14 +23,17 @@ export function LiveView() {
         <p>
           {status === "error"
             ? errorMessage
-            : status === "running"
-              ? "Stream running"
-              : "Ready"}
+            : status === "loading"
+              ? "Loading"
+              : status === "running"
+                ? "Stream running"
+                : "Ready"}
         </p>
       </div>
       <div className="toolbar">
         <Button
           variant="primary"
+          disabled={status === "loading"}
           onClick={isRunning ? stopSession : startSession}
         >
           {isRunning ? "Stop stream" : "Start stream"}

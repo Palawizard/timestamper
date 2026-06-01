@@ -3,10 +3,13 @@ import type { StreamSession } from "../../domain/streamSession";
 import type { TimestampMark } from "../../domain/timestampMark";
 import { calculateElapsedMs } from "../../domain/timeDuration";
 import { listTimestampMarksForSession } from "../../services/marksRepository";
-import { saveStreamSession } from "../../services/sessionsRepository";
+import {
+  getActiveStreamSession,
+  saveStreamSession,
+} from "../../services/sessionsRepository";
 import { completeStreamSession, createStreamSession } from "./liveSession";
 
-export type LiveSessionStatus = "ready" | "running" | "error";
+export type LiveSessionStatus = "loading" | "ready" | "running" | "error";
 
 export type LiveSessionState = {
   activeSession: StreamSession | null;
@@ -28,9 +31,51 @@ export function useLiveSession(): UseLiveSessionResult {
   );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [elapsedMs, setElapsedMs] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
   const [lastCompletedSession, setLastCompletedSession] =
     useState<StreamSession | null>(null);
   const [marks, setMarks] = useState<TimestampMark[]>([]);
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    async function recoverActiveSession() {
+      try {
+        const recoveredSession = await getActiveStreamSession();
+
+        if (!isCurrent) {
+          return;
+        }
+
+        setActiveSession(recoveredSession);
+        setElapsedMs(
+          recoveredSession === null
+            ? 0
+            : calculateElapsedMs(
+                Date.parse(recoveredSession.startedAt),
+                Date.now(),
+              ),
+        );
+        setErrorMessage(null);
+      } catch (error) {
+        console.error(error);
+
+        if (isCurrent) {
+          setErrorMessage("Could not load active stream");
+        }
+      } finally {
+        if (isCurrent) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void recoverActiveSession();
+
+    return () => {
+      isCurrent = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (activeSession === null) {
@@ -127,9 +172,11 @@ export function useLiveSession(): UseLiveSessionResult {
     status:
       errorMessage !== null
         ? "error"
-        : activeSession === null
-          ? "ready"
-          : "running",
+        : isLoading
+          ? "loading"
+          : activeSession === null
+            ? "ready"
+            : "running",
     startSession,
     stopSession,
   };
