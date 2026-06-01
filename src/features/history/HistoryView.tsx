@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import { EmptyState } from "../../components/EmptyState";
 import type { TimestampMark } from "../../domain/timestampMark";
-import { formatMarksAsPlainText } from "../export/exportFormatting";
+import { downloadTextFile } from "../../services/download";
+import {
+  createExportFileName,
+  formatMarksAsPlainText,
+  formatStreamMarksAsCsv,
+} from "../export/exportFormatting";
 import {
   countTimestampMarksForSession,
   listTimestampMarksForSession,
@@ -120,6 +125,19 @@ export function HistoryView() {
     }
   }
 
+  function handleExportCsv() {
+    if (selectedStream === null) {
+      return;
+    }
+
+    downloadTextFile(
+      createExportFileName(selectedStream, "csv"),
+      formatStreamMarksAsCsv(selectedStream, marks),
+      "text/csv;charset=utf-8",
+    );
+    setStatusMessage("CSV exported");
+  }
+
   return (
     <section className="view" aria-labelledby="history-title">
       <div className="view-header">
@@ -147,6 +165,7 @@ export function HistoryView() {
               marks={marks}
               onCopyAllMarks={handleCopyAllMarks}
               onCopyTimestamp={handleCopyTimestamp}
+              onExportCsv={handleExportCsv}
             />
           )}
         </div>
