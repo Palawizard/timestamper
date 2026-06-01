@@ -16,7 +16,9 @@ export function LiveView() {
     stopSession,
   } = useLiveSession();
   const isRunning = activeSession !== null;
-  const markEmptyTitle = isRunning ? "No marks yet" : "Start a stream to add marks";
+  const markEmptyTitle = isRunning
+    ? "No marks yet"
+    : "Start a stream to add marks";
 
   return (
     <section className="view" aria-labelledby="live-title">

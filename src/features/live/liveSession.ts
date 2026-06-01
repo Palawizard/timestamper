@@ -44,7 +44,10 @@ export function createTimestampMark(
   return {
     id: generateId(),
     streamSessionId: session.id,
-    offsetMs: calculateElapsedMs(Date.parse(session.startedAt), Date.parse(now)),
+    offsetMs: calculateElapsedMs(
+      Date.parse(session.startedAt),
+      Date.parse(now),
+    ),
     note: null,
     createdAt: now,
   };

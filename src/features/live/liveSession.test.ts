@@ -43,11 +43,7 @@ describe("live session lifecycle", () => {
     );
 
     expect(
-      createTimestampMark(
-        session,
-        "2026-06-01T19:02:03.456Z",
-        () => "mark-1",
-      ),
+      createTimestampMark(session, "2026-06-01T19:02:03.456Z", () => "mark-1"),
     ).toEqual({
       id: "mark-1",
       streamSessionId: "session-1",
@@ -64,11 +60,8 @@ describe("live session lifecycle", () => {
     );
 
     expect(
-      createTimestampMark(
-        session,
-        "2026-06-01T18:59:59.000Z",
-        () => "mark-1",
-      ).offsetMs,
+      createTimestampMark(session, "2026-06-01T18:59:59.000Z", () => "mark-1")
+        .offsetMs,
     ).toBe(0);
   });
 });
