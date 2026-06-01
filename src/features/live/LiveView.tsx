@@ -1,9 +1,11 @@
 import { Button } from "../../components/Button";
 import { EmptyState } from "../../components/EmptyState";
+import { TimerDisplay } from "../../components/TimerDisplay";
 import { useLiveSession } from "./useLiveSession";
 
 export function LiveView() {
-  const { activeSession, status, startSession, stopSession } = useLiveSession();
+  const { activeSession, elapsedMs, status, startSession, stopSession } =
+    useLiveSession();
   const isRunning = activeSession !== null;
 
   return (
@@ -21,6 +23,7 @@ export function LiveView() {
         </Button>
         <Button disabled={!isRunning}>Add mark</Button>
       </div>
+      <TimerDisplay elapsedMs={elapsedMs} />
       <EmptyState title="No marks yet" />
     </section>
   );

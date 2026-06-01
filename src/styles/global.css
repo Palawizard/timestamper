@@ -135,6 +135,15 @@ p {
   gap: 12px;
 }
 
+.timer-display {
+  color: #17202a;
+  font-family:
+    "SFMono-Regular", Consolas, "Liberation Mono", ui-monospace, monospace;
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
 .empty-state {
   width: 100%;
   padding: 20px 0;
