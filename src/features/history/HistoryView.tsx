@@ -156,7 +156,9 @@ export function HistoryView() {
     <section className="view" aria-labelledby="history-title">
       <div className="view-header">
         <h2 id="history-title">History</h2>
-        <p>{errorMessage ?? statusMessage ?? (isLoading ? "Loading" : "Streams")}</p>
+        <p>
+          {errorMessage ?? statusMessage ?? (isLoading ? "Loading" : "Streams")}
+        </p>
       </div>
       {streams.length === 0 && !isLoading ? (
         <section className="history-empty" aria-label="Streams">
