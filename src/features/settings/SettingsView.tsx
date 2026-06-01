@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { Button } from "../../components/Button";
 import { HotkeyInput } from "../../components/HotkeyInput";
 import {
+  DEFAULT_ADD_MARK_HOTKEY,
   DEFAULT_START_STOP_HOTKEY,
   getOrCreateAppSettings,
 } from "../../services/settingsRepository";
 
 export function SettingsView() {
+  const [addMarkHotkey, setAddMarkHotkey] = useState(DEFAULT_ADD_MARK_HOTKEY);
   const [startStopHotkey, setStartStopHotkey] = useState(
     DEFAULT_START_STOP_HOTKEY,
   );
@@ -18,6 +20,7 @@ export function SettingsView() {
       const settings = await getOrCreateAppSettings();
 
       if (isCurrent) {
+        setAddMarkHotkey(settings.addMarkHotkey);
         setStartStopHotkey(settings.startStopHotkey);
       }
     }
@@ -45,6 +48,12 @@ export function SettingsView() {
             label="Start or stop stream"
             value={startStopHotkey}
             onChange={(event) => setStartStopHotkey(event.target.value)}
+          />
+          <HotkeyInput
+            id="add-mark-hotkey"
+            label="Add mark"
+            value={addMarkHotkey}
+            onChange={(event) => setAddMarkHotkey(event.target.value)}
           />
         </section>
         <div className="toolbar">
