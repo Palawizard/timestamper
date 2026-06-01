@@ -6,6 +6,7 @@ import { useLiveSession } from "./useLiveSession";
 
 export function LiveView() {
   const {
+    addMark,
     activeSession,
     elapsedMs,
     errorMessage,
@@ -38,18 +39,28 @@ export function LiveView() {
         >
           {isRunning ? "Stop stream" : "Start stream"}
         </Button>
-        <Button disabled={!isRunning}>Add mark</Button>
+        <Button disabled={!isRunning} onClick={addMark}>
+          Add mark
+        </Button>
       </div>
       <TimerDisplay elapsedMs={elapsedMs} />
-      {marks.length === 0 ? (
-        <EmptyState title="No marks yet" />
-      ) : (
-        <ul className="mark-list" aria-label="Current marks">
-          {marks.map((mark) => (
-            <li key={mark.id}>{formatTimestamp(mark.offsetMs)}</li>
-          ))}
-        </ul>
-      )}
+      <section className="marks-panel" aria-labelledby="current-marks-title">
+        <div className="section-header">
+          <h3 id="current-marks-title">Current marks</h3>
+          <span>{marks.length}</span>
+        </div>
+        {marks.length === 0 ? (
+          <EmptyState title="No marks yet" />
+        ) : (
+          <ul className="mark-list" aria-label="Current marks">
+            {marks.map((mark) => (
+              <li key={mark.id}>
+                <span>{formatTimestamp(mark.offsetMs)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </section>
   );
 }

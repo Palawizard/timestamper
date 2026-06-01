@@ -31,6 +31,7 @@ input {
 
 h1,
 h2,
+h3,
 p,
 ul {
   margin: 0;
@@ -153,6 +154,28 @@ ul {
   border-bottom: 1px solid #d9dee7;
 }
 
+.marks-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.section-header h3 {
+  font-size: 1rem;
+}
+
+.section-header span {
+  color: #5f6b7a;
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+
 .mark-list {
   display: grid;
   gap: 8px;
@@ -160,7 +183,16 @@ ul {
   color: #25313f;
   border-top: 1px solid #d9dee7;
   border-bottom: 1px solid #d9dee7;
-  list-style-position: inside;
+  list-style: none;
+}
+
+.mark-list li {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+  font-family:
+    "SFMono-Regular", Consolas, "Liberation Mono", ui-monospace, monospace;
+  font-weight: 650;
 }
 
 @media (max-width: 720px) {
