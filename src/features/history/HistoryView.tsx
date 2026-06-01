@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { EmptyState } from "../../components/EmptyState";
 import type { StreamSession } from "../../domain/streamSession";
 import { listCompletedStreamSessions } from "../../services/sessionsRepository";
+import { StreamDetails } from "./StreamDetails";
 import { StreamList } from "./StreamList";
 
 export function HistoryView() {
@@ -9,6 +10,8 @@ export function HistoryView() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedStreamId, setSelectedStreamId] = useState<string | null>(null);
   const [streams, setStreams] = useState<StreamSession[]>([]);
+  const selectedStream =
+    streams.find((stream) => stream.id === selectedStreamId) ?? null;
 
   useEffect(() => {
     let isCurrent = true;
@@ -53,11 +56,16 @@ export function HistoryView() {
       {streams.length === 0 ? (
         <EmptyState title={isLoading ? "Loading" : "No streams yet"} />
       ) : (
-        <StreamList
-          selectedStreamId={selectedStreamId}
-          streams={streams}
-          onSelectStream={setSelectedStreamId}
-        />
+        <div className="history-layout">
+          <StreamList
+            selectedStreamId={selectedStreamId}
+            streams={streams}
+            onSelectStream={setSelectedStreamId}
+          />
+          {selectedStream === null ? null : (
+            <StreamDetails stream={selectedStream} />
+          )}
+        </div>
       )}
     </section>
   );
