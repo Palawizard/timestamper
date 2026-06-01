@@ -1,11 +1,22 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { AppSettings } from "../../domain/settings";
 import type { StreamSession } from "../../domain/streamSession";
 import type { TimestampMark } from "../../domain/timestampMark";
 import { calculateElapsedMs } from "../../domain/timeDuration";
 import {
+  registerAddMarkHotkey,
+  registerStartStopHotkey,
+  type HotkeyCleanup,
+} from "../../services/hotkeys";
+import {
   listTimestampMarksForSession,
   saveTimestampMark,
 } from "../../services/marksRepository";
+import {
+  DEFAULT_ADD_MARK_HOTKEY,
+  DEFAULT_START_STOP_HOTKEY,
+  getOrCreateAppSettings,
+} from "../../services/settingsRepository";
 import {
   getActiveStreamSession,
   saveStreamSession,
@@ -22,6 +33,7 @@ export type LiveSessionState = {
   activeSession: StreamSession | null;
   elapsedMs: number;
   errorMessage: string | null;
+  hotkeys: Pick<AppSettings, "addMarkHotkey" | "startStopHotkey">;
   lastCompletedSession: StreamSession | null;
   marks: TimestampMark[];
   status: LiveSessionStatus;
@@ -39,10 +51,24 @@ export function useLiveSession(): UseLiveSessionResult {
   );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [elapsedMs, setElapsedMs] = useState(0);
+  const [hotkeys, setHotkeys] = useState<
+    Pick<AppSettings, "addMarkHotkey" | "startStopHotkey">
+  >({
+    addMarkHotkey: DEFAULT_ADD_MARK_HOTKEY,
+    startStopHotkey: DEFAULT_START_STOP_HOTKEY,
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [lastCompletedSession, setLastCompletedSession] =
     useState<StreamSession | null>(null);
   const [marks, setMarks] = useState<TimestampMark[]>([]);
+  const activeSessionRef = useRef<StreamSession | null>(null);
+  const addMarkRef = useRef<() => Promise<void>>(async () => undefined);
+  const startSessionRef = useRef<() => Promise<void>>(async () => undefined);
+  const stopSessionRef = useRef<() => Promise<void>>(async () => undefined);
+
+  useEffect(() => {
+    activeSessionRef.current = activeSession;
+  }, [activeSession]);
 
   useEffect(() => {
     let isCurrent = true;
@@ -79,6 +105,36 @@ export function useLiveSession(): UseLiveSessionResult {
     }
 
     void recoverActiveSession();
+
+    return () => {
+      isCurrent = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    async function loadSettings() {
+      try {
+        const savedSettings = await getOrCreateAppSettings();
+
+        if (isCurrent) {
+          setHotkeys({
+            addMarkHotkey: savedSettings.addMarkHotkey,
+            startStopHotkey: savedSettings.startStopHotkey,
+          });
+          setErrorMessage(null);
+        }
+      } catch (error) {
+        console.error(error);
+
+        if (isCurrent) {
+          setErrorMessage("Could not load settings");
+        }
+      }
+    }
+
+    void loadSettings();
 
     return () => {
       isCurrent = false;
@@ -159,6 +215,67 @@ export function useLiveSession(): UseLiveSessionResult {
   }, [activeSession]);
 
   useEffect(() => {
+    addMarkRef.current = addMark;
+    startSessionRef.current = startSession;
+    stopSessionRef.current = stopSession;
+  }, [addMark, startSession, stopSession]);
+
+  useEffect(() => {
+    let isCurrent = true;
+    const cleanups: HotkeyCleanup[] = [];
+
+    async function registerHotkeys() {
+      try {
+        const startStopCleanup = await registerStartStopHotkey(
+          hotkeys.startStopHotkey,
+          () => {
+            if (activeSessionRef.current === null) {
+              void startSessionRef.current();
+              return;
+            }
+
+            void stopSessionRef.current();
+          },
+        );
+
+        if (!isCurrent) {
+          void startStopCleanup();
+          return;
+        }
+
+        cleanups.push(startStopCleanup);
+
+        const addMarkCleanup = await registerAddMarkHotkey(
+          hotkeys.addMarkHotkey,
+          () => {
+            void addMarkRef.current();
+          },
+        );
+
+        if (!isCurrent) {
+          void addMarkCleanup();
+          return;
+        }
+
+        cleanups.push(addMarkCleanup);
+        setErrorMessage(null);
+      } catch (error) {
+        console.error(error);
+        setErrorMessage("Shortcut unavailable");
+      }
+    }
+
+    void registerHotkeys();
+
+    return () => {
+      isCurrent = false;
+      for (const cleanup of cleanups) {
+        void cleanup();
+      }
+    };
+  }, [hotkeys.addMarkHotkey, hotkeys.startStopHotkey]);
+
+  useEffect(() => {
     let isCurrent = true;
 
     async function loadMarks() {
@@ -197,6 +314,7 @@ export function useLiveSession(): UseLiveSessionResult {
     activeSession,
     elapsedMs,
     errorMessage,
+    hotkeys,
     lastCompletedSession,
     marks,
     status:
