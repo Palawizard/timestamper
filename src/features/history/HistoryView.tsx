@@ -5,6 +5,7 @@ import {
   countTimestampMarksForSession,
   listTimestampMarksForSession,
 } from "../../services/marksRepository";
+import { copyTextToClipboard } from "../../services/clipboard";
 import { listCompletedStreamSessions } from "../../services/sessionsRepository";
 import {
   createStreamHistoryItem,
@@ -17,6 +18,7 @@ export function HistoryView() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [marks, setMarks] = useState<TimestampMark[]>([]);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [selectedStreamId, setSelectedStreamId] = useState<string | null>(null);
   const [streams, setStreams] = useState<StreamHistoryItem[]>([]);
   const selectedStream =
@@ -97,11 +99,21 @@ export function HistoryView() {
     };
   }, [selectedStreamId]);
 
+  async function handleCopyTimestamp(timestamp: string) {
+    try {
+      await copyTextToClipboard(timestamp);
+      setStatusMessage("Timestamp copied");
+    } catch (error) {
+      console.error(error);
+      setStatusMessage("Could not copy timestamp");
+    }
+  }
+
   return (
     <section className="view" aria-labelledby="history-title">
       <div className="view-header">
         <h2 id="history-title">History</h2>
-        <p>{errorMessage ?? (isLoading ? "Loading" : "Streams")}</p>
+        <p>{errorMessage ?? statusMessage ?? (isLoading ? "Loading" : "Streams")}</p>
       </div>
       {streams.length === 0 && !isLoading ? (
         <section className="history-empty" aria-label="Streams">
@@ -119,7 +131,11 @@ export function HistoryView() {
             onSelectStream={setSelectedStreamId}
           />
           {selectedStream === null ? null : (
-            <StreamDetails item={selectedStream} marks={marks} />
+            <StreamDetails
+              item={selectedStream}
+              marks={marks}
+              onCopyTimestamp={handleCopyTimestamp}
+            />
           )}
         </div>
       ) : null}

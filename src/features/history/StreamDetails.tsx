@@ -1,3 +1,4 @@
+import { Button } from "../../components/Button";
 import type { TimestampMark } from "../../domain/timestampMark";
 import { formatTimestamp } from "../../domain/timeFormat";
 import type { StreamHistoryItem } from "./historyViewModel";
@@ -5,6 +6,7 @@ import type { StreamHistoryItem } from "./historyViewModel";
 type StreamDetailsProps = {
   item: StreamHistoryItem;
   marks: TimestampMark[];
+  onCopyTimestamp: (timestamp: string) => void;
 };
 
 function formatDateTime(value: string): string {
@@ -14,7 +16,11 @@ function formatDateTime(value: string): string {
   }).format(new Date(value));
 }
 
-export function StreamDetails({ item, marks }: StreamDetailsProps) {
+export function StreamDetails({
+  item,
+  marks,
+  onCopyTimestamp,
+}: StreamDetailsProps) {
   const { stream, summary } = item;
 
   return (
@@ -53,11 +59,18 @@ export function StreamDetails({ item, marks }: StreamDetailsProps) {
           <p className="empty-state">No marks yet</p>
         ) : (
           <ul className="mark-list" aria-label="Marks">
-            {marks.map((mark) => (
-              <li key={mark.id}>
-                <span>{formatTimestamp(mark.offsetMs)}</span>
-              </li>
-            ))}
+            {marks.map((mark) => {
+              const timestamp = formatTimestamp(mark.offsetMs);
+
+              return (
+                <li key={mark.id}>
+                  <span>{timestamp}</span>
+                  <Button onClick={() => onCopyTimestamp(timestamp)}>
+                    Copy timestamp
+                  </Button>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>
