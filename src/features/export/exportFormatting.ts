@@ -36,6 +36,24 @@ export function formatStreamMarksAsCsv(
     .join("\n");
 }
 
+export function formatStreamMarksAsJson(
+  item: StreamHistoryItem,
+  marks: TimestampMark[],
+): string {
+  return JSON.stringify(
+    {
+      stream: item.stream,
+      summary: item.summary,
+      marks: marks.map((mark) => ({
+        ...mark,
+        timestamp: formatTimestamp(mark.offsetMs),
+      })),
+    },
+    null,
+    2,
+  );
+}
+
 export function createExportFileName(
   item: StreamHistoryItem,
   extension: string,

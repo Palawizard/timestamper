@@ -9,6 +9,7 @@ type StreamDetailsProps = {
   onCopyAllMarks: () => void;
   onCopyTimestamp: (timestamp: string) => void;
   onExportCsv: () => void;
+  onExportJson: () => void;
 };
 
 function formatDateTime(value: string): string {
@@ -24,6 +25,7 @@ export function StreamDetails({
   onCopyAllMarks,
   onCopyTimestamp,
   onExportCsv,
+  onExportJson,
 }: StreamDetailsProps) {
   const { stream, summary } = item;
 
@@ -64,6 +66,9 @@ export function StreamDetails({
             </Button>
             <Button disabled={marks.length === 0} onClick={onExportCsv}>
               Export CSV
+            </Button>
+            <Button disabled={marks.length === 0} onClick={onExportJson}>
+              Export JSON
             </Button>
           </div>
         </div>

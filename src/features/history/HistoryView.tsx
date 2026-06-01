@@ -6,6 +6,7 @@ import {
   createExportFileName,
   formatMarksAsPlainText,
   formatStreamMarksAsCsv,
+  formatStreamMarksAsJson,
 } from "../export/exportFormatting";
 import {
   countTimestampMarksForSession,
@@ -138,6 +139,19 @@ export function HistoryView() {
     setStatusMessage("CSV exported");
   }
 
+  function handleExportJson() {
+    if (selectedStream === null) {
+      return;
+    }
+
+    downloadTextFile(
+      createExportFileName(selectedStream, "json"),
+      formatStreamMarksAsJson(selectedStream, marks),
+      "application/json;charset=utf-8",
+    );
+    setStatusMessage("JSON exported");
+  }
+
   return (
     <section className="view" aria-labelledby="history-title">
       <div className="view-header">
@@ -166,6 +180,7 @@ export function HistoryView() {
               onCopyAllMarks={handleCopyAllMarks}
               onCopyTimestamp={handleCopyTimestamp}
               onExportCsv={handleExportCsv}
+              onExportJson={handleExportJson}
             />
           )}
         </div>
