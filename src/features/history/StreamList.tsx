@@ -1,8 +1,8 @@
-import type { StreamSession } from "../../domain/streamSession";
+import type { StreamHistoryItem } from "./historyViewModel";
 
 type StreamListProps = {
   selectedStreamId: string | null;
-  streams: StreamSession[];
+  streams: StreamHistoryItem[];
   onSelectStream: (streamId: string) => void;
 };
 
@@ -21,14 +21,21 @@ export function StreamList({
   return (
     <ul className="stream-list" aria-label="Streams">
       {streams.map((stream) => (
-        <li key={stream.id}>
+        <li key={stream.stream.id}>
           <button
             className="stream-list-button"
             type="button"
-            aria-current={selectedStreamId === stream.id ? "true" : undefined}
-            onClick={() => onSelectStream(stream.id)}
+            aria-current={
+              selectedStreamId === stream.stream.id ? "true" : undefined
+            }
+            onClick={() => onSelectStream(stream.stream.id)}
           >
-            <span>{stream.title ?? formatStreamDate(stream.startedAt)}</span>
+            <span>
+              {stream.stream.title ?? formatStreamDate(stream.stream.startedAt)}
+            </span>
+            <span>
+              {stream.summary.duration} · {stream.summary.markCount} marks
+            </span>
           </button>
         </li>
       ))}

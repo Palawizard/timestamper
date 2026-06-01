@@ -89,3 +89,20 @@ export async function listTimestampMarksForSession(
 
   return rows.map(mapTimestampMarkRow);
 }
+
+export async function countTimestampMarksForSession(
+  streamSessionId: string,
+  client?: DatabaseClient,
+): Promise<number> {
+  const database = await getClient(client);
+  const rows = await database.select<Array<{ count: number }>>(
+    `
+      SELECT COUNT(*) as count
+      FROM timestamp_marks
+      WHERE stream_session_id = $1
+    `,
+    [streamSessionId],
+  );
+
+  return rows[0]?.count ?? 0;
+}

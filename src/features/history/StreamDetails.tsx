@@ -1,7 +1,7 @@
-import type { StreamSession } from "../../domain/streamSession";
+import type { StreamHistoryItem } from "./historyViewModel";
 
 type StreamDetailsProps = {
-  stream: StreamSession;
+  item: StreamHistoryItem;
 };
 
 function formatDateTime(value: string): string {
@@ -11,7 +11,9 @@ function formatDateTime(value: string): string {
   }).format(new Date(value));
 }
 
-export function StreamDetails({ stream }: StreamDetailsProps) {
+export function StreamDetails({ item }: StreamDetailsProps) {
+  const { stream, summary } = item;
+
   return (
     <section className="stream-details" aria-labelledby="stream-details-title">
       <div className="section-header">
@@ -24,7 +26,17 @@ export function StreamDetails({ stream }: StreamDetailsProps) {
         </div>
         <div>
           <dt>Ended</dt>
-          <dd>{stream.endedAt === null ? "Unknown" : formatDateTime(stream.endedAt)}</dd>
+          <dd>
+            {stream.endedAt === null ? "Unknown" : formatDateTime(stream.endedAt)}
+          </dd>
+        </div>
+        <div>
+          <dt>Duration</dt>
+          <dd>{summary.duration}</dd>
+        </div>
+        <div>
+          <dt>Marks</dt>
+          <dd>{summary.markCount}</dd>
         </div>
       </dl>
     </section>
