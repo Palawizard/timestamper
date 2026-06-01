@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { completeStreamSession, createStreamSession } from "./liveSession";
+import {
+  completeStreamSession,
+  createStreamSession,
+  createTimestampMark,
+} from "./liveSession";
 
 describe("live session lifecycle", () => {
   it("creates an active stream session", () => {
@@ -30,5 +34,41 @@ describe("live session lifecycle", () => {
       status: "completed",
       updatedAt: "2026-06-01T19:10:00.000Z",
     });
+  });
+
+  it("creates a timestamp mark with the current stream offset", () => {
+    const session = createStreamSession(
+      "2026-06-01T19:00:00.000Z",
+      () => "session-1",
+    );
+
+    expect(
+      createTimestampMark(
+        session,
+        "2026-06-01T19:02:03.456Z",
+        () => "mark-1",
+      ),
+    ).toEqual({
+      id: "mark-1",
+      streamSessionId: "session-1",
+      offsetMs: 123_456,
+      note: null,
+      createdAt: "2026-06-01T19:02:03.456Z",
+    });
+  });
+
+  it("does not create negative timestamp mark offsets", () => {
+    const session = createStreamSession(
+      "2026-06-01T19:00:00.000Z",
+      () => "session-1",
+    );
+
+    expect(
+      createTimestampMark(
+        session,
+        "2026-06-01T18:59:59.000Z",
+        () => "mark-1",
+      ).offsetMs,
+    ).toBe(0);
   });
 });
