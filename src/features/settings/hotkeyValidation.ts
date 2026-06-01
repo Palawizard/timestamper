@@ -76,7 +76,10 @@ export function validateHotkeys(
     startStopHotkey: normalizeHotkey(startStopHotkey),
   };
 
-  if (values.startStopHotkey.length === 0 || values.addMarkHotkey.length === 0) {
+  if (
+    values.startStopHotkey.length === 0 ||
+    values.addMarkHotkey.length === 0
+  ) {
     return { isValid: false, message: "Shortcut required" };
   }
 
@@ -86,11 +89,17 @@ export function validateHotkeys(
     return { isValid: false, message: "Shortcuts must be different" };
   }
 
-  if (!hasModifier(values.startStopHotkey) || !hasModifier(values.addMarkHotkey)) {
+  if (
+    !hasModifier(values.startStopHotkey) ||
+    !hasModifier(values.addMarkHotkey)
+  ) {
     return { isValid: false, message: "Shortcut needs a modifier" };
   }
 
-  if (!hasMainKey(values.startStopHotkey) || !hasMainKey(values.addMarkHotkey)) {
+  if (
+    !hasMainKey(values.startStopHotkey) ||
+    !hasMainKey(values.addMarkHotkey)
+  ) {
     return { isValid: false, message: "Shortcut unavailable" };
   }
 
