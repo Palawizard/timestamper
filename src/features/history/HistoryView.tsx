@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { EmptyState } from "../../components/EmptyState";
-import { countTimestampMarksForSession } from "../../services/marksRepository";
+import type { TimestampMark } from "../../domain/timestampMark";
+import {
+  countTimestampMarksForSession,
+  listTimestampMarksForSession,
+} from "../../services/marksRepository";
 import { listCompletedStreamSessions } from "../../services/sessionsRepository";
 import {
   createStreamHistoryItem,
@@ -12,6 +16,7 @@ import { StreamList } from "./StreamList";
 export function HistoryView() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [marks, setMarks] = useState<TimestampMark[]>([]);
   const [selectedStreamId, setSelectedStreamId] = useState<string | null>(null);
   const [streams, setStreams] = useState<StreamHistoryItem[]>([]);
   const selectedStream =
@@ -59,6 +64,39 @@ export function HistoryView() {
     };
   }, []);
 
+  useEffect(() => {
+    let isCurrent = true;
+
+    async function loadMarks() {
+      if (selectedStreamId === null) {
+        setMarks([]);
+        return;
+      }
+
+      try {
+        const selectedMarks =
+          await listTimestampMarksForSession(selectedStreamId);
+
+        if (isCurrent) {
+          setMarks(selectedMarks);
+          setErrorMessage(null);
+        }
+      } catch (error) {
+        console.error(error);
+
+        if (isCurrent) {
+          setErrorMessage("Could not load marks");
+        }
+      }
+    }
+
+    void loadMarks();
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [selectedStreamId]);
+
   return (
     <section className="view" aria-labelledby="history-title">
       <div className="view-header">
@@ -75,7 +113,7 @@ export function HistoryView() {
             onSelectStream={setSelectedStreamId}
           />
           {selectedStream === null ? null : (
-            <StreamDetails item={selectedStream} />
+            <StreamDetails item={selectedStream} marks={marks} />
           )}
         </div>
       )}
