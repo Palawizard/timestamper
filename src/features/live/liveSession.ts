@@ -1,5 +1,9 @@
 import type { StreamSession } from "../../domain/streamSession";
-import { calculateDurationMs } from "../../domain/timeDuration";
+import type { TimestampMark } from "../../domain/timestampMark";
+import {
+  calculateDurationMs,
+  calculateElapsedMs,
+} from "../../domain/timeDuration";
 
 export type IdGenerator = () => string;
 
@@ -29,5 +33,19 @@ export function completeStreamSession(
     durationMs: calculateDurationMs(session.startedAt, endedAt),
     status: "completed",
     updatedAt: endedAt,
+  };
+}
+
+export function createTimestampMark(
+  session: StreamSession,
+  now: string,
+  generateId: IdGenerator = crypto.randomUUID.bind(crypto),
+): TimestampMark {
+  return {
+    id: generateId(),
+    streamSessionId: session.id,
+    offsetMs: calculateElapsedMs(Date.parse(session.startedAt), Date.parse(now)),
+    note: null,
+    createdAt: now,
   };
 }

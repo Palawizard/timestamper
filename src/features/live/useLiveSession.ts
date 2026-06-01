@@ -7,7 +7,11 @@ import {
   getActiveStreamSession,
   saveStreamSession,
 } from "../../services/sessionsRepository";
-import { completeStreamSession, createStreamSession } from "./liveSession";
+import {
+  completeStreamSession,
+  createStreamSession,
+  createTimestampMark,
+} from "./liveSession";
 
 export type LiveSessionStatus = "loading" | "ready" | "running" | "error";
 
@@ -21,6 +25,7 @@ export type LiveSessionState = {
 };
 
 export type UseLiveSessionResult = LiveSessionState & {
+  addMark: () => Promise<void>;
   startSession: () => Promise<void>;
   stopSession: () => Promise<void>;
 };
@@ -129,6 +134,21 @@ export function useLiveSession(): UseLiveSessionResult {
     }
   }, [activeSession]);
 
+  const addMark = useCallback(async () => {
+    const currentSession = activeSession;
+
+    if (currentSession === null) {
+      setErrorMessage("Start a stream first");
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const mark = createTimestampMark(currentSession, now);
+
+    setMarks((currentMarks) => [...currentMarks, mark]);
+    setErrorMessage(null);
+  }, [activeSession]);
+
   useEffect(() => {
     let isCurrent = true;
 
@@ -164,6 +184,7 @@ export function useLiveSession(): UseLiveSessionResult {
   }, [activeSession]);
 
   return {
+    addMark,
     activeSession,
     elapsedMs,
     errorMessage,
