@@ -7,7 +7,10 @@ import {
   getOrCreateAppSettings,
   saveAppSettings,
 } from "../../services/settingsRepository";
-import { notifyAppSettingsChanged } from "../../services/settingsEvents";
+import {
+  notifyAppSettingsChanged,
+  subscribeToAppSettingsChanges,
+} from "../../services/settingsEvents";
 import { validateHotkeys } from "./hotkeyValidation";
 
 export function SettingsView() {
@@ -38,6 +41,14 @@ export function SettingsView() {
     return () => {
       isCurrent = false;
     };
+  }, []);
+
+  useEffect(() => {
+    return subscribeToAppSettingsChanges((settings) => {
+      setSavedSettings(settings);
+      setAddMarkHotkey(settings.addMarkHotkey);
+      setStartStopHotkey(settings.startStopHotkey);
+    });
   }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
