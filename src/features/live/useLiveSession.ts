@@ -45,6 +45,14 @@ export type UseLiveSessionResult = LiveSessionState & {
   stopSession: () => Promise<void>;
 };
 
+type RegisteredHotkeys = Pick<
+  AppSettings,
+  "addMarkHotkey" | "startStopHotkey"
+> & {
+  addMarkCleanup: HotkeyCleanup;
+  startStopCleanup: HotkeyCleanup;
+};
+
 export function useLiveSession(): UseLiveSessionResult {
   const [activeSession, setActiveSession] = useState<StreamSession | null>(
     null,
@@ -63,6 +71,7 @@ export function useLiveSession(): UseLiveSessionResult {
   const [marks, setMarks] = useState<TimestampMark[]>([]);
   const activeSessionRef = useRef<StreamSession | null>(null);
   const addMarkRef = useRef<() => Promise<void>>(async () => undefined);
+  const registeredHotkeysRef = useRef<RegisteredHotkeys | null>(null);
   const startSessionRef = useRef<() => Promise<void>>(async () => undefined);
   const stopSessionRef = useRef<() => Promise<void>>(async () => undefined);
 
@@ -222,45 +231,82 @@ export function useLiveSession(): UseLiveSessionResult {
 
   useEffect(() => {
     let isCurrent = true;
-    const cleanups: HotkeyCleanup[] = [];
 
     async function registerHotkeys() {
+      const currentRegistration = registeredHotkeysRef.current;
+
+      if (
+        currentRegistration?.addMarkHotkey === hotkeys.addMarkHotkey &&
+        currentRegistration.startStopHotkey === hotkeys.startStopHotkey
+      ) {
+        return;
+      }
+
+      const pendingCleanups: HotkeyCleanup[] = [];
+
       try {
-        const startStopCleanup = await registerStartStopHotkey(
-          hotkeys.startStopHotkey,
-          () => {
-            if (activeSessionRef.current === null) {
-              void startSessionRef.current();
-              return;
-            }
+        const startStopCleanup =
+          currentRegistration?.startStopHotkey === hotkeys.startStopHotkey
+            ? currentRegistration.startStopCleanup
+            : await registerStartStopHotkey(hotkeys.startStopHotkey, () => {
+                if (activeSessionRef.current === null) {
+                  void startSessionRef.current();
+                  return;
+                }
 
-            void stopSessionRef.current();
-          },
-        );
+                void stopSessionRef.current();
+              });
+
+        if (currentRegistration?.startStopCleanup !== startStopCleanup) {
+          pendingCleanups.push(startStopCleanup);
+        }
+
+        const addMarkCleanup =
+          currentRegistration?.addMarkHotkey === hotkeys.addMarkHotkey
+            ? currentRegistration.addMarkCleanup
+            : await registerAddMarkHotkey(hotkeys.addMarkHotkey, () => {
+                void addMarkRef.current();
+              });
+
+        if (currentRegistration?.addMarkCleanup !== addMarkCleanup) {
+          pendingCleanups.push(addMarkCleanup);
+        }
 
         if (!isCurrent) {
-          void startStopCleanup();
+          for (const cleanup of pendingCleanups) {
+            void cleanup();
+          }
           return;
         }
 
-        cleanups.push(startStopCleanup);
-
-        const addMarkCleanup = await registerAddMarkHotkey(
-          hotkeys.addMarkHotkey,
-          () => {
-            void addMarkRef.current();
-          },
-        );
-
-        if (!isCurrent) {
-          void addMarkCleanup();
-          return;
+        if (
+          currentRegistration !== null &&
+          currentRegistration.startStopCleanup !== startStopCleanup
+        ) {
+          void currentRegistration.startStopCleanup();
         }
 
-        cleanups.push(addMarkCleanup);
+        if (
+          currentRegistration !== null &&
+          currentRegistration.addMarkCleanup !== addMarkCleanup
+        ) {
+          void currentRegistration.addMarkCleanup();
+        }
+
+        registeredHotkeysRef.current = {
+          addMarkCleanup,
+          addMarkHotkey: hotkeys.addMarkHotkey,
+          startStopCleanup,
+          startStopHotkey: hotkeys.startStopHotkey,
+        };
         setErrorMessage(null);
       } catch (error) {
         console.error(error);
+
+        for (const cleanup of pendingCleanups) {
+          void cleanup();
+        }
+
         setErrorMessage("Shortcut unavailable");
       }
     }
@@ -269,11 +315,22 @@ export function useLiveSession(): UseLiveSessionResult {
 
     return () => {
       isCurrent = false;
-      for (const cleanup of cleanups) {
-        void cleanup();
-      }
     };
   }, [hotkeys.addMarkHotkey, hotkeys.startStopHotkey]);
+
+  useEffect(() => {
+    return () => {
+      const currentRegistration = registeredHotkeysRef.current;
+
+      if (currentRegistration === null) {
+        return;
+      }
+
+      void currentRegistration.addMarkCleanup();
+      void currentRegistration.startStopCleanup();
+      registeredHotkeysRef.current = null;
+    };
+  }, []);
 
   useEffect(() => {
     let isCurrent = true;
