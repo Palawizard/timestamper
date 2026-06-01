@@ -267,6 +267,10 @@ ul {
   align-items: start;
 }
 
+.history-empty {
+  max-width: 420px;
+}
+
 .stream-details {
   display: grid;
   gap: 16px;

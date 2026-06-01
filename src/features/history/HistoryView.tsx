@@ -103,9 +103,15 @@ export function HistoryView() {
         <h2 id="history-title">History</h2>
         <p>{errorMessage ?? (isLoading ? "Loading" : "Streams")}</p>
       </div>
-      {streams.length === 0 ? (
-        <EmptyState title={isLoading ? "Loading" : "No streams yet"} />
-      ) : (
+      {streams.length === 0 && !isLoading ? (
+        <section className="history-empty" aria-label="Streams">
+          <EmptyState title="No streams yet" />
+        </section>
+      ) : null}
+      {streams.length === 0 && isLoading ? (
+        <EmptyState title="Loading" />
+      ) : null}
+      {streams.length > 0 ? (
         <div className="history-layout">
           <StreamList
             selectedStreamId={selectedStreamId}
@@ -116,7 +122,7 @@ export function HistoryView() {
             <StreamDetails item={selectedStream} marks={marks} />
           )}
         </div>
-      )}
+      ) : null}
     </section>
   );
 }
