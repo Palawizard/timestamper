@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Button } from "../../components/Button";
 import { HotkeyInput } from "../../components/HotkeyInput";
 import {
@@ -6,9 +6,11 @@ import {
   DEFAULT_START_STOP_HOTKEY,
   getOrCreateAppSettings,
 } from "../../services/settingsRepository";
+import { validateHotkeys } from "./hotkeyValidation";
 
 export function SettingsView() {
   const [addMarkHotkey, setAddMarkHotkey] = useState(DEFAULT_ADD_MARK_HOTKEY);
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [startStopHotkey, setStartStopHotkey] = useState(
     DEFAULT_START_STOP_HOTKEY,
   );
@@ -32,13 +34,26 @@ export function SettingsView() {
     };
   }, []);
 
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const validation = validateHotkeys(startStopHotkey, addMarkHotkey);
+
+    if (!validation.isValid) {
+      setFeedbackMessage(validation.message);
+      return;
+    }
+
+    setFeedbackMessage(null);
+  }
+
   return (
     <section className="view" aria-labelledby="settings-title">
       <div className="view-header">
         <h2 id="settings-title">Settings</h2>
         <p>Hotkeys</p>
       </div>
-      <form className="settings-form">
+      <form className="settings-form" onSubmit={handleSubmit}>
         <section className="settings-section" aria-labelledby="hotkeys-title">
           <div className="section-header">
             <h3 id="hotkeys-title">Hotkeys</h3>
@@ -60,6 +75,9 @@ export function SettingsView() {
           <Button variant="primary">Save</Button>
           <Button>Cancel</Button>
         </div>
+        {feedbackMessage === null ? null : (
+          <p className="form-feedback">{feedbackMessage}</p>
+        )}
       </form>
     </section>
   );
