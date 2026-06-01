@@ -30,7 +30,9 @@ export function StreamDetails({ item, marks }: StreamDetailsProps) {
         <div>
           <dt>Ended</dt>
           <dd>
-            {stream.endedAt === null ? "Unknown" : formatDateTime(stream.endedAt)}
+            {stream.endedAt === null
+              ? "Unknown"
+              : formatDateTime(stream.endedAt)}
           </dd>
         </div>
         <div>

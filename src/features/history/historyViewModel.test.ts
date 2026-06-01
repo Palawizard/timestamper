@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { StreamSession } from "../../domain/streamSession";
-import { createStreamHistoryItem, createStreamSummary } from "./historyViewModel";
+import {
+  createStreamHistoryItem,
+  createStreamSummary,
+} from "./historyViewModel";
 
 const completedStream: StreamSession = {
   id: "stream-1",
