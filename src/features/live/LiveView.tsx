@@ -16,6 +16,7 @@ export function LiveView() {
     stopSession,
   } = useLiveSession();
   const isRunning = activeSession !== null;
+  const markEmptyTitle = isRunning ? "No marks yet" : "Start a stream to add marks";
 
   return (
     <section className="view" aria-labelledby="live-title">
@@ -50,7 +51,7 @@ export function LiveView() {
           <span>{marks.length}</span>
         </div>
         {marks.length === 0 ? (
-          <EmptyState title="No marks yet" />
+          <EmptyState title={markEmptyTitle} />
         ) : (
           <ul className="mark-list" aria-label="Current marks">
             {marks.map((mark) => (
