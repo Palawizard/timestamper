@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { mapTimestampMarkRow } from "./marksRepository";
-import { mapAppSettingsRow, createDefaultAppSettings } from "./settingsRepository";
+import {
+  mapAppSettingsRow,
+  createDefaultAppSettings,
+} from "./settingsRepository";
 import { mapStreamSessionRow } from "./sessionsRepository";
 
 describe("repository mappings", () => {
