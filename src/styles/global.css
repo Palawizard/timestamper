@@ -208,6 +208,12 @@ ul {
   font-weight: 650;
 }
 
+.section-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .mark-list {
   display: grid;
   gap: 8px;

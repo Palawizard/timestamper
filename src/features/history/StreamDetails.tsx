@@ -6,6 +6,7 @@ import type { StreamHistoryItem } from "./historyViewModel";
 type StreamDetailsProps = {
   item: StreamHistoryItem;
   marks: TimestampMark[];
+  onCopyAllMarks: () => void;
   onCopyTimestamp: (timestamp: string) => void;
 };
 
@@ -19,6 +20,7 @@ function formatDateTime(value: string): string {
 export function StreamDetails({
   item,
   marks,
+  onCopyAllMarks,
   onCopyTimestamp,
 }: StreamDetailsProps) {
   const { stream, summary } = item;
@@ -53,7 +55,12 @@ export function StreamDetails({
       <section className="marks-panel" aria-labelledby="history-marks-title">
         <div className="section-header">
           <h3 id="history-marks-title">Marks</h3>
-          <span>{marks.length}</span>
+          <div className="section-actions">
+            <span>{marks.length}</span>
+            <Button disabled={marks.length === 0} onClick={onCopyAllMarks}>
+              Copy all
+            </Button>
+          </div>
         </div>
         {marks.length === 0 ? (
           <p className="empty-state">No marks yet</p>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { EmptyState } from "../../components/EmptyState";
 import type { TimestampMark } from "../../domain/timestampMark";
+import { formatMarksAsPlainText } from "../export/exportFormatting";
 import {
   countTimestampMarksForSession,
   listTimestampMarksForSession,
@@ -109,6 +110,16 @@ export function HistoryView() {
     }
   }
 
+  async function handleCopyAllMarks() {
+    try {
+      await copyTextToClipboard(formatMarksAsPlainText(marks));
+      setStatusMessage("Marks copied");
+    } catch (error) {
+      console.error(error);
+      setStatusMessage("Could not copy marks");
+    }
+  }
+
   return (
     <section className="view" aria-labelledby="history-title">
       <div className="view-header">
@@ -134,6 +145,7 @@ export function HistoryView() {
             <StreamDetails
               item={selectedStream}
               marks={marks}
+              onCopyAllMarks={handleCopyAllMarks}
               onCopyTimestamp={handleCopyTimestamp}
             />
           )}
