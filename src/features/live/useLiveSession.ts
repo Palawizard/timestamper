@@ -17,6 +17,7 @@ import {
   DEFAULT_START_STOP_HOTKEY,
   getOrCreateAppSettings,
 } from "../../services/settingsRepository";
+import { subscribeToAppSettingsChanges } from "../../services/settingsEvents";
 import {
   getActiveStreamSession,
   saveStreamSession,
@@ -118,6 +119,15 @@ export function useLiveSession(): UseLiveSessionResult {
     return () => {
       isCurrent = false;
     };
+  }, []);
+
+  useEffect(() => {
+    return subscribeToAppSettingsChanges((settings) => {
+      setHotkeys({
+        addMarkHotkey: settings.addMarkHotkey,
+        startStopHotkey: settings.startStopHotkey,
+      });
+    });
   }, []);
 
   useEffect(() => {

@@ -7,6 +7,7 @@ import {
   getOrCreateAppSettings,
   saveAppSettings,
 } from "../../services/settingsRepository";
+import { notifyAppSettingsChanged } from "../../services/settingsEvents";
 import { validateHotkeys } from "./hotkeyValidation";
 
 export function SettingsView() {
@@ -59,6 +60,7 @@ export function SettingsView() {
       };
 
       await saveAppSettings(nextSettings);
+      notifyAppSettingsChanged(nextSettings);
       setSavedSettings(nextSettings);
       setAddMarkHotkey(nextSettings.addMarkHotkey);
       setStartStopHotkey(nextSettings.startStopHotkey);
