@@ -32,6 +32,8 @@ input {
 h1,
 h2,
 h3,
+dl,
+dd,
 p,
 ul {
   margin: 0;
@@ -135,6 +137,36 @@ ul {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+}
+
+.hotkey-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.hotkey-list div {
+  display: grid;
+  gap: 2px;
+  min-width: 160px;
+  padding: 10px 12px;
+  border: 1px solid #d9dee7;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.hotkey-list dt {
+  color: #5f6b7a;
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.hotkey-list dd {
+  color: #25313f;
+  font-family:
+    "SFMono-Regular", Consolas, "Liberation Mono", ui-monospace, monospace;
+  font-size: 0.95rem;
+  font-weight: 650;
 }
 
 .timer-display {

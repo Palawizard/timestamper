@@ -10,6 +10,7 @@ export function LiveView() {
     activeSession,
     elapsedMs,
     errorMessage,
+    hotkeys,
     marks,
     status,
     startSession,
@@ -34,6 +35,16 @@ export function LiveView() {
                 : "Ready"}
         </p>
       </div>
+      <dl className="hotkey-list" aria-label="Current hotkeys">
+        <div>
+          <dt>Start or stop</dt>
+          <dd>{hotkeys.startStopHotkey}</dd>
+        </div>
+        <div>
+          <dt>Add mark</dt>
+          <dd>{hotkeys.addMarkHotkey}</dd>
+        </div>
+      </dl>
       <div className="toolbar">
         <Button
           variant="primary"
