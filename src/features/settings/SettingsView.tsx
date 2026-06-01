@@ -5,12 +5,16 @@ import {
   DEFAULT_ADD_MARK_HOTKEY,
   DEFAULT_START_STOP_HOTKEY,
   getOrCreateAppSettings,
+  saveAppSettings,
 } from "../../services/settingsRepository";
 import { validateHotkeys } from "./hotkeyValidation";
 
 export function SettingsView() {
   const [addMarkHotkey, setAddMarkHotkey] = useState(DEFAULT_ADD_MARK_HOTKEY);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+  const [savedSettings, setSavedSettings] = useState<Awaited<
+    ReturnType<typeof getOrCreateAppSettings>
+  > | null>(null);
   const [startStopHotkey, setStartStopHotkey] = useState(
     DEFAULT_START_STOP_HOTKEY,
   );
@@ -22,6 +26,7 @@ export function SettingsView() {
       const settings = await getOrCreateAppSettings();
 
       if (isCurrent) {
+        setSavedSettings(settings);
         setAddMarkHotkey(settings.addMarkHotkey);
         setStartStopHotkey(settings.startStopHotkey);
       }
@@ -34,7 +39,7 @@ export function SettingsView() {
     };
   }, []);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const validation = validateHotkeys(startStopHotkey, addMarkHotkey);
@@ -44,6 +49,33 @@ export function SettingsView() {
       return;
     }
 
+    try {
+      const now = new Date().toISOString();
+      const nextSettings = {
+        ...(savedSettings ?? (await getOrCreateAppSettings())),
+        addMarkHotkey: validation.values.addMarkHotkey,
+        startStopHotkey: validation.values.startStopHotkey,
+        updatedAt: now,
+      };
+
+      await saveAppSettings(nextSettings);
+      setSavedSettings(nextSettings);
+      setAddMarkHotkey(nextSettings.addMarkHotkey);
+      setStartStopHotkey(nextSettings.startStopHotkey);
+      setFeedbackMessage("Shortcut saved");
+    } catch (error) {
+      console.error(error);
+      setFeedbackMessage("Could not save settings");
+    }
+  }
+
+  function handleCancel() {
+    if (savedSettings === null) {
+      return;
+    }
+
+    setAddMarkHotkey(savedSettings.addMarkHotkey);
+    setStartStopHotkey(savedSettings.startStopHotkey);
     setFeedbackMessage(null);
   }
 
@@ -73,7 +105,7 @@ export function SettingsView() {
         </section>
         <div className="toolbar">
           <Button variant="primary">Save</Button>
-          <Button>Cancel</Button>
+          <Button onClick={handleCancel}>Cancel</Button>
         </div>
         {feedbackMessage === null ? null : (
           <p className="form-feedback">{feedbackMessage}</p>
