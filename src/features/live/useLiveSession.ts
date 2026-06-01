@@ -2,7 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 import type { StreamSession } from "../../domain/streamSession";
 import type { TimestampMark } from "../../domain/timestampMark";
 import { calculateElapsedMs } from "../../domain/timeDuration";
-import { listTimestampMarksForSession } from "../../services/marksRepository";
+import {
+  listTimestampMarksForSession,
+  saveTimestampMark,
+} from "../../services/marksRepository";
 import {
   getActiveStreamSession,
   saveStreamSession,
@@ -145,8 +148,14 @@ export function useLiveSession(): UseLiveSessionResult {
     const now = new Date().toISOString();
     const mark = createTimestampMark(currentSession, now);
 
-    setMarks((currentMarks) => [...currentMarks, mark]);
-    setErrorMessage(null);
+    try {
+      await saveTimestampMark(mark);
+      setMarks((currentMarks) => [...currentMarks, mark]);
+      setErrorMessage(null);
+    } catch (error) {
+      console.error(error);
+      setErrorMessage("Could not save mark");
+    }
   }, [activeSession]);
 
   useEffect(() => {
