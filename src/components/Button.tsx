@@ -10,6 +10,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 export function Button({
   children,
   className = "",
+  type = "button",
   variant = "secondary",
   ...props
 }: ButtonProps) {
@@ -18,7 +19,7 @@ export function Button({
     .join(" ");
 
   return (
-    <button className={classes} type="button" {...props}>
+    <button className={classes} type={type} {...props}>
       {children}
     </button>
   );

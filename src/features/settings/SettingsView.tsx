@@ -117,8 +117,12 @@ export function SettingsView() {
           />
         </section>
         <div className="toolbar">
-          <Button variant="primary">Save</Button>
-          <Button onClick={handleCancel}>Cancel</Button>
+          <Button type="submit" variant="primary">
+            Save
+          </Button>
+          <Button type="button" onClick={handleCancel}>
+            Cancel
+          </Button>
         </div>
         {feedbackMessage === null ? null : (
           <p className="form-feedback">{feedbackMessage}</p>
