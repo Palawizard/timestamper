@@ -16,12 +16,8 @@ import {
   DEFAULT_ADD_MARK_HOTKEY,
   DEFAULT_START_STOP_HOTKEY,
   getOrCreateAppSettings,
-  saveAppSettings,
 } from "../../services/settingsRepository";
-import {
-  notifyAppSettingsChanged,
-  subscribeToAppSettingsChanges,
-} from "../../services/settingsEvents";
+import { subscribeToAppSettingsChanges } from "../../services/settingsEvents";
 import {
   getActiveStreamSession,
   listActiveStreamSessions,
@@ -349,20 +345,10 @@ export function useLiveSession(): UseLiveSessionResult {
         }
 
         if (currentRegistration !== null) {
-          const previousSettings = await getOrCreateAppSettings();
-          const restoredSettings = {
-            ...previousSettings,
+          setHotkeys({
             addMarkHotkey: currentRegistration.addMarkHotkey,
             startStopHotkey: currentRegistration.startStopHotkey,
-            updatedAt: new Date().toISOString(),
-          };
-
-          await saveAppSettings(restoredSettings);
-          setHotkeys({
-            addMarkHotkey: restoredSettings.addMarkHotkey,
-            startStopHotkey: restoredSettings.startStopHotkey,
           });
-          notifyAppSettingsChanged(restoredSettings);
         }
 
         setErrorMessage("Shortcut unavailable");
