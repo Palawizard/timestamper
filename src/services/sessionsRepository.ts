@@ -125,6 +125,23 @@ export async function getActiveStreamSession(
   return rows[0] === undefined ? null : mapStreamSessionRow(rows[0]);
 }
 
+export async function listActiveStreamSessions(
+  client?: DatabaseClient,
+): Promise<StreamSession[]> {
+  const database = await getClient(client);
+  const rows = await database.select<StreamSessionRow[]>(
+    `
+      SELECT ${STREAM_SESSION_COLUMNS}
+      FROM stream_sessions
+      WHERE status = $1
+      ORDER BY started_at DESC
+    `,
+    ["active"],
+  );
+
+  return rows.map(mapStreamSessionRow);
+}
+
 export async function listCompletedStreamSessions(
   client?: DatabaseClient,
 ): Promise<StreamSession[]> {

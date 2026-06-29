@@ -24,6 +24,7 @@ import {
 } from "../../services/settingsEvents";
 import {
   getActiveStreamSession,
+  listActiveStreamSessions,
   saveStreamSession,
 } from "../../services/sessionsRepository";
 import {
@@ -58,6 +59,21 @@ type RegisteredHotkeys = Pick<
   startStopCleanup: HotkeyCleanup;
 };
 
+async function completeStaleActiveSessions(
+  keepSessionId: string | null,
+): Promise<void> {
+  const now = new Date().toISOString();
+  const activeSessions = await listActiveStreamSessions();
+
+  for (const session of activeSessions) {
+    if (session.id === keepSessionId) {
+      continue;
+    }
+
+    await saveStreamSession(completeStreamSession(session, now));
+  }
+}
+
 export function useLiveSession(): UseLiveSessionResult {
   const [activeSession, setActiveSession] = useState<StreamSession | null>(
     null,
@@ -90,6 +106,14 @@ export function useLiveSession(): UseLiveSessionResult {
     async function recoverActiveSession() {
       try {
         const recoveredSession = await getActiveStreamSession();
+
+        if (!isCurrent) {
+          return;
+        }
+
+        if (recoveredSession !== null) {
+          await completeStaleActiveSessions(recoveredSession.id);
+        }
 
         if (!isCurrent) {
           return;
@@ -180,6 +204,9 @@ export function useLiveSession(): UseLiveSessionResult {
   const startSession = useCallback(async () => {
     try {
       const now = new Date().toISOString();
+
+      await completeStaleActiveSessions(null);
+
       const session = createStreamSession(now);
 
       await saveStreamSession(session);
