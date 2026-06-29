@@ -2,7 +2,7 @@ import { Button } from "../../components/Button";
 import { EmptyState } from "../../components/EmptyState";
 import { TimerDisplay } from "../../components/TimerDisplay";
 import { formatTimestamp } from "../../domain/timeFormat";
-import { useLiveSession } from "./useLiveSession";
+import { useLiveSessionContext } from "./liveSessionContext";
 
 export function LiveView() {
   const {
@@ -15,7 +15,7 @@ export function LiveView() {
     status,
     startSession,
     stopSession,
-  } = useLiveSession();
+  } = useLiveSessionContext();
   const isRunning = activeSession !== null;
   const markEmptyTitle = isRunning
     ? "No marks yet"
