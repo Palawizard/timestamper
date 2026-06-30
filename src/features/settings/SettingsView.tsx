@@ -20,6 +20,7 @@ import {
 } from "../../services/obsClient";
 import { useObsIntegrationContext } from "../obs/obsIntegrationContext";
 import { validateObsSettings } from "./obsSettingsValidation";
+import { ObsSetupDialog } from "./ObsSetupDialog";
 
 type Feedback = {
   message: string;
@@ -32,6 +33,7 @@ export function SettingsView() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isTestingObs, setIsTestingObs] = useState(false);
+  const [isObsSetupOpen, setIsObsSetupOpen] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [savedSettings, setSavedSettings] = useState<Awaited<
     ReturnType<typeof getOrCreateAppSettings>
@@ -255,9 +257,14 @@ export function SettingsView() {
           <section className="settings-section" aria-labelledby="obs-title">
             <div className="section-header">
               <h3 id="obs-title">OBS integration</h3>
-              {obsIntegration.enabled && obsIntegration.message !== null ? (
-                <span>{obsIntegration.message}</span>
-              ) : null}
+              <div className="section-actions">
+                {obsIntegration.enabled && obsIntegration.message !== null ? (
+                  <span>{obsIntegration.message}</span>
+                ) : null}
+                <Button type="button" onClick={() => setIsObsSetupOpen(true)}>
+                  How to set up OBS
+                </Button>
+              </div>
             </div>
             <label className="toggle-field" htmlFor="obs-enabled">
               <input
@@ -345,6 +352,10 @@ export function SettingsView() {
           )}
         </form>
       )}
+      <ObsSetupDialog
+        onClose={() => setIsObsSetupOpen(false)}
+        open={isObsSetupOpen}
+      />
     </section>
   );
 }

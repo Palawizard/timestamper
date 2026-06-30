@@ -47,8 +47,17 @@ export function LiveView() {
         </p>
       </div>
       {obsIntegration.enabled && obsIntegration.message !== null ? (
-        <div className="inline-status" role="status">
-          <span>{obsIntegration.message}</span>
+        <div
+          className={`obs-status obs-status-${obsIntegration.state}`}
+          role="status"
+        >
+          <div className="obs-status-copy">
+            <span className="obs-status-dot" aria-hidden="true" />
+            <div>
+              <strong>OBS integration</strong>
+              <span>{obsIntegration.message}</span>
+            </div>
+          </div>
           {obsIntegration.state === "disconnected" ||
           obsIntegration.state === "authentication-failed" ||
           obsIntegration.state === "error" ? (
