@@ -22,6 +22,7 @@ vi.mock("../../services/settingsEvents", () => ({
 const liveSessionValue = {
   activeSession: null,
   addMark: vi.fn(),
+  adoptSessionForObs: vi.fn(),
   elapsedMs: 0,
   errorMessage: null,
   hotkeys: { addMarkHotkey: "F10", startStopHotkey: "F9" },
@@ -29,10 +30,13 @@ const liveSessionValue = {
   lastCompletedSession: null,
   marks: [],
   noticeMessage: null,
+  onManualSessionStop: vi.fn(() => () => undefined),
   setHotkeysSuspended: vi.fn(),
   startSession: vi.fn(),
+  startSessionFromObs: vi.fn(),
   status: "ready" as const,
   stopSession: vi.fn(),
+  stopSessionFromObs: vi.fn(),
 };
 
 describe("SettingsView", () => {
