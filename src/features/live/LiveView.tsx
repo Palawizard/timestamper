@@ -1,0 +1,127 @@
+import { Button } from "../../components/Button";
+import { EmptyState } from "../../components/EmptyState";
+import { TimerDisplay } from "../../components/TimerDisplay";
+import { formatTimestamp } from "../../domain/timeFormat";
+import { useLiveSessionContext } from "./liveSessionContext";
+import { useObsIntegrationContext } from "../obs/obsIntegrationContext";
+
+export function LiveView() {
+  const {
+    addMark,
+    activeSession,
+    elapsedMs,
+    errorMessage,
+    hotkeys,
+    isSessionTransitionPending,
+    marks,
+    noticeMessage,
+    status,
+    startSession,
+    stopSession,
+  } = useLiveSessionContext();
+  const obsIntegration = useObsIntegrationContext();
+  const isRunning = activeSession !== null;
+  const markEmptyTitle = isRunning
+    ? "No marks yet"
+    : "Start a stream to add marks";
+
+  return (
+    <section className="view" aria-labelledby="live-title">
+      <div className="view-header">
+        <div className="view-title-row">
+          <h2 id="live-title">Live</h2>
+          <span
+            className={`status-badge ${isRunning ? "status-badge-active" : ""}`}
+          >
+            {isRunning ? "Running" : "Standby"}
+          </span>
+        </div>
+        <p className={status === "error" ? "status-text-error" : ""}>
+          {status === "error"
+            ? errorMessage
+            : status === "loading"
+              ? "Loading"
+              : status === "running"
+                ? "Stream running"
+                : (noticeMessage ?? "Ready")}
+        </p>
+      </div>
+      {obsIntegration.enabled && obsIntegration.message !== null ? (
+        <div
+          className={`obs-status obs-status-${obsIntegration.state}`}
+          role="status"
+        >
+          <div className="obs-status-copy">
+            <span className="obs-status-dot" aria-hidden="true" />
+            <div>
+              <strong>OBS integration</strong>
+              <span>{obsIntegration.message}</span>
+            </div>
+          </div>
+          {obsIntegration.state === "disconnected" ||
+          obsIntegration.state === "authentication-failed" ||
+          obsIntegration.state === "error" ? (
+            <Button onClick={obsIntegration.retry}>Retry</Button>
+          ) : null}
+        </div>
+      ) : null}
+      <dl className="hotkey-list" aria-label="Current hotkeys">
+        <div>
+          <dt>Start or stop</dt>
+          <dd>{hotkeys.startStopHotkey}</dd>
+        </div>
+        <div>
+          <dt>Add mark</dt>
+          <dd>{hotkeys.addMarkHotkey}</dd>
+        </div>
+      </dl>
+      <div className="toolbar">
+        <Button
+          variant="primary"
+          className={isRunning ? "button-danger" : ""}
+          disabled={status === "loading" || isSessionTransitionPending}
+          onClick={isRunning ? stopSession : startSession}
+        >
+          {isSessionTransitionPending
+            ? isRunning
+              ? "Stopping..."
+              : "Starting..."
+            : isRunning
+              ? "Stop stream"
+              : "Start stream"}
+        </Button>
+        <Button disabled={!isRunning} onClick={addMark}>
+          Add mark
+        </Button>
+      </div>
+      <div className={`timer-card${isRunning ? " timer-card-active" : ""}`}>
+        <span>{isRunning ? "Elapsed time" : "Timer"}</span>
+        <TimerDisplay elapsedMs={elapsedMs} />
+      </div>
+      <section className="marks-panel" aria-labelledby="current-marks-title">
+        <div className="section-header">
+          <h3 id="current-marks-title">Current marks</h3>
+          <span>{marks.length}</span>
+        </div>
+        {marks.length === 0 ? (
+          <EmptyState
+            title={markEmptyTitle}
+            description={
+              isRunning
+                ? "Use the button or your global shortcut to save a moment."
+                : "Your marks will appear here during the next stream."
+            }
+          />
+        ) : (
+          <ul className="mark-list" aria-label="Current marks">
+            {marks.map((mark) => (
+              <li key={mark.id}>
+                <span>{formatTimestamp(mark.offsetMs)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </section>
+  );
+}
