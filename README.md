@@ -88,11 +88,11 @@
 
 Les releases sont publiées sur [GitHub Releases](https://github.com/Palawizard/timestamper/releases).
 
-| Fichier                         | Description                                     |
-| ------------------------------- | ----------------------------------------------- |
-| `Timestamper_*_x64-setup.exe`   | Installateur NSIS Windows (utilisateur courant) |
-| `Timestamper_*_x64_en-US.msi`   | Installateur MSI Windows                        |
-| `release-checksums.txt`         | Empreintes SHA-256 des artefacts (si présent)   |
+| Fichier                       | Description                                     |
+| ----------------------------- | ----------------------------------------------- |
+| `Timestamper_*_x64-setup.exe` | Installateur NSIS Windows (utilisateur courant) |
+| `Timestamper_*_x64_en-US.msi` | Installateur MSI Windows                        |
+| `release-checksums.txt`       | Empreintes SHA-256 des artefacts (si présent)   |
 
 **Prérequis runtime** : Microsoft Edge WebView2 (installé automatiquement par l'installateur si nécessaire).
 
@@ -165,17 +165,17 @@ Timestamper observe l'état du stream OBS ; il ne démarre ni n'arrête OBS.
 
 <div align="center">
 
-| Commande            | Description                               |
-| ------------------- | ----------------------------------------- |
-| `pnpm dev`          | Serveur Vite seul (frontend)              |
-| `pnpm tauri dev`    | Application complète en développement     |
-| `pnpm test`         | Tests unitaires et composants (Vitest)    |
-| `pnpm lint`         | ESLint                                    |
-| `pnpm typecheck`    | Vérification TypeScript                   |
-| `pnpm format:check` | Vérification Prettier                     |
-| `pnpm format`       | Formatage Prettier                        |
-| `pnpm build`        | Build frontend                            |
-| `pnpm tauri build`  | Build production + installateurs Windows  |
+| Commande            | Description                              |
+| ------------------- | ---------------------------------------- |
+| `pnpm dev`          | Serveur Vite seul (frontend)             |
+| `pnpm tauri dev`    | Application complète en développement    |
+| `pnpm test`         | Tests unitaires et composants (Vitest)   |
+| `pnpm lint`         | ESLint                                   |
+| `pnpm typecheck`    | Vérification TypeScript                  |
+| `pnpm format:check` | Vérification Prettier                    |
+| `pnpm format`       | Formatage Prettier                       |
+| `pnpm build`        | Build frontend                           |
+| `pnpm tauri build`  | Build production + installateurs Windows |
 
 </div>
 
@@ -218,15 +218,15 @@ Start stream → Timer (elapsed ms) → Add mark (offset ms) → Stop stream
 
 <div align="center">
 
-| Couche              | Technologie                                      |
-| ------------------- | ------------------------------------------------ |
-| **Shell desktop**   | Tauri 2                                          |
-| **Backend**         | Rust 2021, plugins SQL et global shortcut        |
-| **Frontend**        | React 19, TypeScript strict, Vite                |
-| **Persistance**     | SQLite (plugin Tauri SQL), migrations versionnées |
-| **OBS**             | obs-websocket-js 5.x                             |
-| **Tests**           | Vitest, React Testing Library                    |
-| **Qualité**         | ESLint, Prettier, GitHub Actions                 |
+| Couche            | Technologie                                       |
+| ----------------- | ------------------------------------------------- |
+| **Shell desktop** | Tauri 2                                           |
+| **Backend**       | Rust 2021, plugins SQL et global shortcut         |
+| **Frontend**      | React 19, TypeScript strict, Vite                 |
+| **Persistance**   | SQLite (plugin Tauri SQL), migrations versionnées |
+| **OBS**           | obs-websocket-js 5.x                              |
+| **Tests**         | Vitest, React Testing Library                     |
+| **Qualité**       | ESLint, Prettier, GitHub Actions                  |
 
 </div>
 
