@@ -2,81 +2,81 @@
 
 # Timestamper
 
-### Marquez vos moments importants pendant un stream Twitch
+### Mark important moments during your Twitch stream
 
 [![Tauri](https://img.shields.io/badge/Tauri-2-24C8DB?style=for-the-badge&logo=tauri)](https://v2.tauri.app/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react)](https://react.dev/)
 [![Rust](https://img.shields.io/badge/Rust-stable-000000?style=for-the-badge&logo=rust)](https://www.rust-lang.org/)
 [![SQLite](https://img.shields.io/badge/SQLite-local-003B57?style=for-the-badge&logo=sqlite)](https://www.sqlite.org/)
-[![License](https://img.shields.io/badge/Licence-MIT-green?style=for-the-badge)](LICENSE)
-[![Platform](https://img.shields.io/badge/Plateforme-Windows_10%2F11-0078D4?style=for-the-badge&logo=windows)](https://www.microsoft.com/windows)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-Windows_10%2F11-0078D4?style=for-the-badge&logo=windows)](https://www.microsoft.com/windows)
 
-[Fonctionnalités](#-fonctionnalités) • [Téléchargement](#-téléchargement) • [Démarrage rapide](#-démarrage-rapide) • [Architecture](#-architecture) • [Vérification](#-vérification)
+[Features](#-features) • [Download](#-download) • [Quick start](#-quick-start) • [Architecture](#-architecture) • [Verification](#-verification)
 
 </div>
 
 ---
 
-## ◆ Fonctionnalités
+## ◆ Features
 
 <table>
 <tr>
 <td width="50%">
 
-### » Session live
+### » Live session
 
-- **Timer de stream** : démarre à zéro quand la session commence
-- **Marquage instantané** : enregistre l'instant écoulé depuis le début du stream
-- **Raccourcis globaux** : start/stop et add mark depuis n'importe quelle application
-- **Liste des marks courants** : affichage immédiat avec horodatage `HH:MM:SS`
-- **Streams vides ignorés** : une session sans mark n'est pas sauvegardée dans l'historique
+- **Stream timer** — starts at zero when the session begins
+- **Instant marking** — saves elapsed time since stream start
+- **Global shortcuts** — start/stop and add mark from any app
+- **Current marks list** — immediate display with `HH:MM:SS` timestamps
+- **Empty streams skipped** — sessions without marks are not saved to history
 
 </td>
 <td width="50%">
 
-### » Historique et export
+### » History and export
 
-- **Streams terminés** : date, heure de début, durée et nombre de marks
-- **Détail par stream** : liste complète des timestamps enregistrés
-- **Copie** : un timestamp ou tous les marks en texte brut
-- **Export** : CSV et JSON par stream
-- **Suppression** : confirmation avant effacement définitif
+- **Completed streams** — date, start time, duration, and mark count
+- **Stream details** — full list of saved timestamps
+- **Copy** — one timestamp or all marks as plain text
+- **Export** — CSV and JSON per stream
+- **Delete** — confirmation before permanent removal
 
 </td>
 </tr>
 <tr>
 <td>
 
-### » Réglages et OBS
+### » Settings and OBS
 
-- **Raccourcis configurables** : capture clavier intégrée dans les réglages
-- **Validation** : un raccourci invalide ne remplace pas la configuration précédente
-- **Intégration OBS optionnelle** : synchronisation start/stop via WebSocket 5.x
-- **Guide OBS intégré** : étapes de connexion depuis l'écran Réglages
-- **Reconnexion** : reprise automatique après déconnexion temporaire
+- **Configurable shortcuts** — built-in keyboard capture in Settings
+- **Validation** — invalid shortcuts do not replace the previous working config
+- **Optional OBS integration** — start/stop sync via WebSocket 5.x
+- **Built-in OBS guide** — connection steps from the Settings screen
+- **Reconnect** — automatic recovery after temporary disconnects
 
 </td>
 <td>
 
-### » Expérience
+### » Experience
 
-- **Interface en anglais** : navigation `Live`, `History`, `Settings`
-- **Stockage local** : SQLite dans le dossier de données Tauri
-- **Hors ligne** : aucun compte, cloud ni télémétrie
-- **Application légère** : shell Tauri 2, pas de navigateur embarqué complet
+- **English UI** — navigation via `Live`, `History`, and `Settings`
+- **Local storage** — SQLite in the Tauri app data folder
+- **Offline** — no account, cloud, or telemetry
+- **Lightweight app** — Tauri 2 shell without a full embedded browser
 
 </td>
 </tr>
 <tr>
 <td colspan="2">
 
-### » Limites connues (beta)
+### » Known limitations (beta)
 
-- Windows 10 et 11 uniquement — pas de macOS ni Linux dans cette release
-- Installateur **non signé** : SmartScreen peut demander une confirmation supplémentaire
-- Les raccourcis globaux peuvent nécessiter des autorisations système selon la configuration Windows
-- OBS doit exposer son serveur WebSocket ; Timestamper **n'envoie jamais de commandes** à OBS
-- Pas de connexion Twitch, détection VOD, cloud sync ni auto-update
+- Windows 10 and 11 only — no macOS or Linux in this release
+- **Unsigned installer** — SmartScreen may ask for extra confirmation
+- Global shortcuts may require system permissions depending on Windows setup
+- OBS must expose its WebSocket server; Timestamper **never sends commands** to OBS
+- No Twitch API, VOD detection, cloud sync, or auto-update
 
 </td>
 </tr>
@@ -84,47 +84,47 @@
 
 ---
 
-## ◆ Téléchargement
+## ◆ Download
 
-Les releases sont publiées sur [GitHub Releases](https://github.com/Palawizard/timestamper/releases).
+Releases are published on [GitHub Releases](https://github.com/Palawizard/timestamper/releases).
 
-| Fichier                       | Description                                     |
-| ----------------------------- | ----------------------------------------------- |
-| `Timestamper_*_x64-setup.exe` | Installateur NSIS Windows (utilisateur courant) |
-| `release-checksums.txt`       | Empreintes SHA-256 des artefacts (si présent)   |
+| File                          | Description                             |
+| ----------------------------- | --------------------------------------- |
+| `Timestamper_*_x64-setup.exe` | NSIS Windows installer (per-user)       |
+| `release-checksums.txt`       | SHA-256 checksums for release artifacts |
 
-> La beta publie l'installateur NSIS uniquement — WiX/MSI n'accepte pas encore le suffixe de version `beta`.
+> This beta ships the NSIS installer only — WiX/MSI does not accept the `beta` version suffix yet.
 
-**Prérequis runtime** : Microsoft Edge WebView2 (installé automatiquement par l'installateur si nécessaire).
+**Runtime requirement:** Microsoft Edge WebView2 (installed automatically by the installer when needed).
 
 ---
 
-## ▶ Démarrage rapide
+## ▶ Quick start
 
-### Prérequis (développement)
+### Prerequisites (development)
 
-- Windows 10 (1803+) ou Windows 11
+- Windows 10 (1803+) or Windows 11
 - [Node.js](https://nodejs.org/) 22+
 - [pnpm](https://pnpm.io/) 10
 - [Rust](https://www.rust-lang.org/) stable (MSVC)
-- Microsoft C++ Build Tools avec `Desktop development with C++`
+- Microsoft C++ Build Tools with `Desktop development with C++`
 - [WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/)
 
-### Installation des dépendances
+### Install dependencies
 
 ```powershell
 pnpm install
 ```
 
-### Lancer en développement
+### Run in development
 
 ```powershell
 pnpm tauri dev
 ```
 
-> `pnpm dev` seul lance Vite sans runtime Tauri — utile uniquement pour le frontend.
+> `pnpm dev` runs Vite only without the Tauri runtime — frontend-only use.
 
-### Vérifier le projet
+### Verify the project
 
 ```powershell
 pnpm format:check
@@ -135,48 +135,48 @@ pnpm build
 pnpm tauri build
 ```
 
-### Créer l'installateur Windows
+### Build the Windows installer
 
 ```powershell
 pnpm tauri build
 ```
 
-L'installateur est généré dans `src-tauri/target/release/bundle/`.
+The installer is generated in `src-tauri/target/release/bundle/`.
 
-### Raccourcis par défaut
+### Default shortcuts
 
 ```text
 Ctrl+Alt+F9  : start or stop stream
 Ctrl+Alt+F10 : add mark
 ```
 
-Modifiables dans **Settings** → **Save**.
+Change them in **Settings** → **Save**.
 
-### Configuration OBS (optionnel)
+### OBS setup (optional)
 
-1. OBS → **Tools** → **WebSocket Server Settings** → activer le serveur (port **4455** par défaut)
-2. Timestamper → **Settings** → activer **OBS integration**, renseigner host, port et mot de passe
-3. **Test connection** puis **Save**
+1. OBS → **Tools** → **WebSocket Server Settings** → enable the server (port **4455** by default)
+2. Timestamper → **Settings** → enable **OBS integration**, set host, port, and password
+3. **Test connection**, then **Save**
 
-Timestamper observe l'état du stream OBS ; il ne démarre ni n'arrête OBS.
+Timestamper observes OBS stream state; it does not start or stop OBS.
 
 ---
 
-## ◆ Scripts utiles
+## ◆ Useful scripts
 
 <div align="center">
 
-| Commande            | Description                              |
-| ------------------- | ---------------------------------------- |
-| `pnpm dev`          | Serveur Vite seul (frontend)             |
-| `pnpm tauri dev`    | Application complète en développement    |
-| `pnpm test`         | Tests unitaires et composants (Vitest)   |
-| `pnpm lint`         | ESLint                                   |
-| `pnpm typecheck`    | Vérification TypeScript                  |
-| `pnpm format:check` | Vérification Prettier                    |
-| `pnpm format`       | Formatage Prettier                       |
-| `pnpm build`        | Build frontend                           |
-| `pnpm tauri build`  | Build production + installateurs Windows |
+| Command             | Description                           |
+| ------------------- | ------------------------------------- |
+| `pnpm dev`          | Vite dev server (frontend only)       |
+| `pnpm tauri dev`    | Full app in development               |
+| `pnpm test`         | Unit and component tests (Vitest)     |
+| `pnpm lint`         | ESLint                                |
+| `pnpm typecheck`    | TypeScript check                      |
+| `pnpm format:check` | Prettier check                        |
+| `pnpm format`       | Prettier format                       |
+| `pnpm build`        | Frontend build                        |
+| `pnpm tauri build`  | Production build + Windows installers |
 
 </div>
 
@@ -186,73 +186,73 @@ Timestamper observe l'état du stream OBS ; il ne démarre ni n'arrête OBS.
 
 ```
 timestamper/
-├── src/                          → Frontend React (features, composants)
-│   ├── app/                      → App shell et routes
-│   ├── components/               → UI partagée (layout, boutons, timer)
+├── src/                          → React frontend (features, components)
+│   ├── app/                      → App shell and routes
+│   ├── components/               → Shared UI (layout, buttons, timer)
 │   ├── features/
-│   │   ├── live/                 → Session active, timer, marks courants
-│   │   ├── history/              → Streams terminés, détail, export
-│   │   ├── settings/             → Raccourcis et connexion OBS
-│   │   ├── obs/                  → Orchestration WebSocket OBS
-│   │   └── export/               → Formatage TXT / CSV / JSON
-│   ├── domain/                   → Types et helpers purs
+│   │   ├── live/                 → Active session, timer, current marks
+│   │   ├── history/              → Completed streams, details, export
+│   │   ├── settings/             → Shortcuts and OBS connection
+│   │   ├── obs/                  → OBS WebSocket orchestration
+│   │   └── export/               → TXT / CSV / JSON formatting
+│   ├── domain/                   → Pure types and helpers
 │   └── services/                 → SQLite, hotkeys, repositories
 ├── src-tauri/
-│   ├── src/                      → Shell Tauri et plugins Rust
-│   ├── capabilities/             → Permissions Tauri
-│   └── app-icon.svg              → Source SVG des icônes
-└── .github/workflows/            → CI qualité et pipeline release
+│   ├── src/                      → Tauri shell and Rust plugins
+│   ├── capabilities/             → Tauri permissions
+│   └── app-icon.svg              → SVG icon source
+└── .github/workflows/            → CI and release pipelines
 ```
 
-### Flux session live
+### Live session flow
 
 ```
 Start stream → Timer (elapsed ms) → Add mark (offset ms) → Stop stream
     → Persist session + marks → History → Copy / export
 ```
 
-`useLiveSession` reste monté au niveau App via `LiveSessionProvider` pour que les raccourcis globaux survivent aux changements de vue.
+`useLiveSession` stays mounted at App level via `LiveSessionProvider` so global shortcuts survive view changes.
 
 ---
 
-## ◆ Stack technique
+## ◆ Tech stack
 
 <div align="center">
 
-| Couche            | Technologie                                       |
-| ----------------- | ------------------------------------------------- |
-| **Shell desktop** | Tauri 2                                           |
-| **Backend**       | Rust 2021, plugins SQL et global shortcut         |
-| **Frontend**      | React 19, TypeScript strict, Vite                 |
-| **Persistance**   | SQLite (plugin Tauri SQL), migrations versionnées |
-| **OBS**           | obs-websocket-js 5.x                              |
-| **Tests**         | Vitest, React Testing Library                     |
-| **Qualité**       | ESLint, Prettier, GitHub Actions                  |
+| Layer             | Technology                                      |
+| ----------------- | ----------------------------------------------- |
+| **Desktop shell** | Tauri 2                                         |
+| **Backend**       | Rust 2021, SQL and global shortcut plugins      |
+| **Frontend**      | React 19, strict TypeScript, Vite               |
+| **Persistence**   | SQLite (Tauri SQL plugin), versioned migrations |
+| **OBS**           | obs-websocket-js 5.x                            |
+| **Tests**         | Vitest, React Testing Library                   |
+| **Quality**       | ESLint, Prettier, GitHub Actions                |
 
 </div>
 
-### Pourquoi Tauri ?
+### Why Tauri?
 
-- → Raccourcis globaux natifs pendant qu'OBS ou un jeu est au premier plan
-- → Stockage SQLite local sans serveur
-- → Installateur léger et permissions Tauri minimales
-- → Interface web rapide à itérer sans embarquer Chromium complet
-
----
-
-## ◆ Sécurité et confidentialité
-
-- Application **locale** : pas de télémétrie ni de compte
-- Capacités Tauri **limitées** au SQL, aux raccourcis globaux et au runtime desktop
-- Mot de passe OBS stocké **localement** dans SQLite
-- Timestamper **n'envoie pas de commandes** à OBS — observation uniquement
-- Installateur en mode **utilisateur courant** — pas d'élévation admin par défaut
-
-Voir [SECURITY.md](SECURITY.md) pour signaler une vulnérabilité.
+- → Native global shortcuts while OBS or a game is focused
+- → Local SQLite storage without a server
+- → Lightweight installer with minimal Tauri permissions
+- → Fast web UI iteration without shipping full Chromium
 
 ---
 
-## ◆ Vérification
+## ◆ Security and privacy
+
+- **Local app** — no telemetry or account
+- **Limited Tauri capabilities** — SQL, global shortcuts, and desktop runtime only
+- OBS password stored **locally** in SQLite
+- Timestamper **does not send commands** to OBS — observation only
+- **Per-user installer** — no admin elevation by default
+
+See [SECURITY.md](SECURITY.md) to report a vulnerability.
+
+---
+
+## ◆ Verification
 
 ```powershell
 pnpm format:check
@@ -262,28 +262,28 @@ pnpm test
 pnpm tauri build
 ```
 
-> Les raccourcis globaux et l'installateur sur machine vierge doivent être validés manuellement.
+> Global shortcuts and the installer on a clean machine must be validated manually.
 
 ---
 
-## ◆ Contribution et release
+## ◆ Contributing and releases
 
-- Branche d'intégration : `dev`
-- Commits : `type(scope): thing done` (anglais, sans body)
-- Releases : tag `v*` sur `main` déclenche le workflow GitHub Actions
-- Changelog : voir [CHANGELOG.md](CHANGELOG.md)
-- Guide contributeur : [CONTRIBUTING.md](CONTRIBUTING.md)
+- Integration branch: `dev`
+- Commits: `type(scope): thing done` (English, no body)
+- Releases: `v*` tags on `main` trigger the GitHub Actions workflow
+- Changelog: see [CHANGELOG.md](CHANGELOG.md)
+- Contributor guide: [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ---
 
-## ◆ Licence
+## ◆ License
 
-Distribué sous licence [MIT](LICENSE).
+Distributed under the [MIT](LICENSE) license.
 
 ---
 
 <div align="center">
 
-Timestamper · Version beta · Windows 10/11
+Timestamper · Beta · Windows 10/11
 
 </div>

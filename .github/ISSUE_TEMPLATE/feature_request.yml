@@ -1,33 +1,33 @@
-name: Demande de fonctionnalité
-description: Proposer une amélioration pour Timestamper
+name: Feature request
+description: Suggest an improvement for Timestamper
 title: "[Feature] "
 labels: ["enhancement"]
 body:
   - type: textarea
     id: problem
     attributes:
-      label: Problème ou besoin
-      description: Quel cas d'usage streamer cette fonctionnalité adresse-t-elle ?
+      label: Problem or need
+      description: Which streamer workflow would this feature support?
     validations:
       required: true
 
   - type: textarea
     id: solution
     attributes:
-      label: Solution proposée
+      label: Proposed solution
     validations:
       required: true
 
   - type: textarea
     id: alternatives
     attributes:
-      label: Alternatives envisagées
-      description: Optionnel
+      label: Alternatives considered
+      description: Optional
 
   - type: checkboxes
     id: scope
     attributes:
-      label: Périmètre
+      label: Scope
       options:
-        - label: Je comprends que Timestamper reste une app locale sans cloud pour l'instant
+        - label: I understand Timestamper remains a local app without cloud sync for now
           required: true
