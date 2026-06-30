@@ -10,6 +10,7 @@ describe("LiveView", () => {
         value={{
           activeSession: null,
           addMark: vi.fn(),
+          adoptSessionForObs: vi.fn(),
           elapsedMs: 0,
           errorMessage: null,
           hotkeys: {
@@ -20,10 +21,13 @@ describe("LiveView", () => {
           lastCompletedSession: null,
           marks: [],
           noticeMessage: "Stream not saved because no marks were added",
+          onManualSessionStop: vi.fn(() => () => undefined),
           setHotkeysSuspended: vi.fn(),
           startSession: vi.fn(),
+          startSessionFromObs: vi.fn(),
           status: "ready",
           stopSession: vi.fn(),
+          stopSessionFromObs: vi.fn(),
         }}
       >
         <LiveView />
@@ -46,10 +50,12 @@ describe("LiveView", () => {
             endedAt: null,
             durationMs: null,
             status: "active",
+            controlSource: "manual",
             createdAt: "2026-06-30T15:00:00.000Z",
             updatedAt: "2026-06-30T15:00:00.000Z",
           },
           addMark: vi.fn(),
+          adoptSessionForObs: vi.fn(),
           elapsedMs: 0,
           errorMessage: null,
           hotkeys: {
@@ -60,10 +66,13 @@ describe("LiveView", () => {
           lastCompletedSession: null,
           marks: [],
           noticeMessage: null,
+          onManualSessionStop: vi.fn(() => () => undefined),
           setHotkeysSuspended: vi.fn(),
           startSession: vi.fn(),
+          startSessionFromObs: vi.fn(),
           status: "running",
           stopSession: vi.fn(),
+          stopSessionFromObs: vi.fn(),
         }}
       >
         <LiveView />

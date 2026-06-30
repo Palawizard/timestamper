@@ -1,5 +1,6 @@
 import type {
   StreamSession,
+  StreamSessionControlSource,
   StreamSessionStatus,
 } from "../domain/streamSession";
 import { getDatabase } from "./database";
@@ -12,6 +13,7 @@ type StreamSessionRow = {
   ended_at: string | null;
   duration_ms: number | null;
   status: string;
+  control_source: string;
   created_at: string;
   updated_at: string;
 };
@@ -25,6 +27,7 @@ const STREAM_SESSION_COLUMNS = `
   ended_at,
   duration_ms,
   status,
+  control_source,
   created_at,
   updated_at
 `;
@@ -33,9 +36,19 @@ function isStreamSessionStatus(value: string): value is StreamSessionStatus {
   return value === "active" || value === "completed";
 }
 
+function isStreamSessionControlSource(
+  value: string,
+): value is StreamSessionControlSource {
+  return value === "manual" || value === "obs";
+}
+
 export function mapStreamSessionRow(row: StreamSessionRow): StreamSession {
   if (!isStreamSessionStatus(row.status)) {
     throw new Error(`Unknown stream session status: ${row.status}`);
+  }
+
+  if (!isStreamSessionControlSource(row.control_source)) {
+    throw new Error(`Unknown stream control source: ${row.control_source}`);
   }
 
   return {
@@ -45,6 +58,7 @@ export function mapStreamSessionRow(row: StreamSessionRow): StreamSession {
     endedAt: row.ended_at,
     durationMs: row.duration_ms,
     status: row.status,
+    controlSource: row.control_source,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -69,16 +83,18 @@ export async function saveStreamSession(
         ended_at,
         duration_ms,
         status,
+        control_source,
         created_at,
         updated_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       ON CONFLICT(id) DO UPDATE SET
         title = excluded.title,
         started_at = excluded.started_at,
         ended_at = excluded.ended_at,
         duration_ms = excluded.duration_ms,
         status = excluded.status,
+        control_source = excluded.control_source,
         updated_at = excluded.updated_at
     `,
     [
@@ -88,6 +104,7 @@ export async function saveStreamSession(
       session.endedAt,
       session.durationMs,
       session.status,
+      session.controlSource,
       session.createdAt,
       session.updatedAt,
     ],

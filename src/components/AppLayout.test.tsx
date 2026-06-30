@@ -15,10 +15,12 @@ describe("AppLayout", () => {
             endedAt: null,
             durationMs: null,
             status: "active",
+            controlSource: "manual",
             createdAt: "2026-06-30T15:00:00.000Z",
             updatedAt: "2026-06-30T15:00:00.000Z",
           },
           addMark: vi.fn(),
+          adoptSessionForObs: vi.fn(),
           elapsedMs: 65_000,
           errorMessage: null,
           hotkeys: {
@@ -29,10 +31,13 @@ describe("AppLayout", () => {
           lastCompletedSession: null,
           marks: [],
           noticeMessage: null,
+          onManualSessionStop: vi.fn(() => () => undefined),
           setHotkeysSuspended: vi.fn(),
           startSession: vi.fn(),
+          startSessionFromObs: vi.fn(),
           status: "running",
           stopSession: vi.fn(),
+          stopSessionFromObs: vi.fn(),
         }}
       >
         <AppLayout activeRoute="history" onRouteChange={vi.fn()}>

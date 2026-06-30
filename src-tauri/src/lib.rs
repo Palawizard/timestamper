@@ -2,10 +2,11 @@ use tauri_plugin_sql::{Migration, MigrationKind};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let migrations = vec![Migration {
-        version: 1,
-        description: "create initial timestamp tables",
-        sql: "
+    let migrations = vec![
+        Migration {
+            version: 1,
+            description: "create initial timestamp tables",
+            sql: "
             CREATE TABLE IF NOT EXISTS stream_sessions (
                 id TEXT PRIMARY KEY,
                 title TEXT,
@@ -37,9 +38,29 @@ pub fn run() {
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
             );
-        ",
-        kind: MigrationKind::Up,
-    }];
+            ",
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 2,
+            description: "add obs integration settings",
+            sql: "
+                ALTER TABLE app_settings ADD COLUMN obs_enabled INTEGER NOT NULL DEFAULT 0;
+                ALTER TABLE app_settings ADD COLUMN obs_host TEXT NOT NULL DEFAULT '127.0.0.1';
+                ALTER TABLE app_settings ADD COLUMN obs_port INTEGER NOT NULL DEFAULT 4455;
+                ALTER TABLE app_settings ADD COLUMN obs_password TEXT NOT NULL DEFAULT '';
+            ",
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 3,
+            description: "add stream session control source",
+            sql: "
+                ALTER TABLE stream_sessions ADD COLUMN control_source TEXT NOT NULL DEFAULT 'manual';
+            ",
+            kind: MigrationKind::Up,
+        },
+    ];
 
     tauri::Builder::default()
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())

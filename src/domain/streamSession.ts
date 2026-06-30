@@ -1,4 +1,5 @@
 export type StreamSessionStatus = "active" | "completed";
+export type StreamSessionControlSource = "manual" | "obs";
 
 export type StreamSession = {
   id: string;
@@ -7,6 +8,7 @@ export type StreamSession = {
   endedAt: string | null;
   durationMs: number | null;
   status: StreamSessionStatus;
+  controlSource: StreamSessionControlSource;
   createdAt: string;
   updatedAt: string;
 };
