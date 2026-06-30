@@ -88,6 +88,7 @@ export function useLiveSession(): UseLiveSessionResult {
   const [marks, setMarks] = useState<TimestampMark[]>([]);
   const activeSessionRef = useRef<StreamSession | null>(null);
   const addMarkRef = useRef<() => Promise<void>>(async () => undefined);
+  const hotkeyRegistrationTaskRef = useRef<Promise<void>>(Promise.resolve());
   const registeredHotkeysRef = useRef<RegisteredHotkeys | null>(null);
   const startSessionRef = useRef<() => Promise<void>>(async () => undefined);
   const stopSessionRef = useRef<() => Promise<void>>(async () => undefined);
@@ -310,9 +311,9 @@ export function useLiveSession(): UseLiveSessionResult {
         }
 
         if (!isCurrent) {
-          for (const cleanup of pendingCleanups) {
-            void cleanup();
-          }
+          await Promise.allSettled(
+            pendingCleanups.map((cleanup) => cleanup()),
+          );
           return;
         }
 
@@ -340,9 +341,9 @@ export function useLiveSession(): UseLiveSessionResult {
       } catch (error) {
         console.error(error);
 
-        for (const cleanup of pendingCleanups) {
-          void cleanup();
-        }
+        await Promise.allSettled(
+          pendingCleanups.map((cleanup) => cleanup()),
+        );
 
         if (currentRegistration !== null) {
           setHotkeys({
@@ -355,26 +356,32 @@ export function useLiveSession(): UseLiveSessionResult {
       }
     }
 
-    void registerHotkeys();
+    // React Strict Mode remounts effects in development. Serializing native
+    // registration prevents the remount from racing the canceled first pass.
+    hotkeyRegistrationTaskRef.current = hotkeyRegistrationTaskRef.current.then(
+      registerHotkeys,
+      registerHotkeys,
+    );
 
     return () => {
       isCurrent = false;
+
+      hotkeyRegistrationTaskRef.current =
+        hotkeyRegistrationTaskRef.current.then(async () => {
+          const currentRegistration = registeredHotkeysRef.current;
+
+          if (currentRegistration === null) {
+            return;
+          }
+
+          registeredHotkeysRef.current = null;
+          await Promise.allSettled([
+            currentRegistration.addMarkCleanup(),
+            currentRegistration.startStopCleanup(),
+          ]);
+        });
     };
   }, [hotkeys.addMarkHotkey, hotkeys.startStopHotkey]);
-
-  useEffect(() => {
-    return () => {
-      const currentRegistration = registeredHotkeysRef.current;
-
-      if (currentRegistration === null) {
-        return;
-      }
-
-      void currentRegistration.addMarkCleanup();
-      void currentRegistration.startStopCleanup();
-      registeredHotkeysRef.current = null;
-    };
-  }, []);
 
   useEffect(() => {
     let isCurrent = true;
