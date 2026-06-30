@@ -9,6 +9,7 @@ import {
   type HotkeyCleanup,
 } from "../../services/hotkeys";
 import {
+  countTimestampMarksForSession,
   listTimestampMarksForSession,
   saveTimestampMark,
 } from "../../services/marksRepository";
@@ -19,6 +20,7 @@ import {
 } from "../../services/settingsRepository";
 import { subscribeToAppSettingsChanges } from "../../services/settingsEvents";
 import {
+  deleteStreamSession,
   getActiveStreamSession,
   listActiveStreamSessions,
   saveStreamSession,
@@ -38,6 +40,7 @@ export type LiveSessionState = {
   hotkeys: Pick<AppSettings, "addMarkHotkey" | "startStopHotkey">;
   lastCompletedSession: StreamSession | null;
   marks: TimestampMark[];
+  noticeMessage: string | null;
   status: LiveSessionStatus;
 };
 
@@ -67,7 +70,13 @@ async function completeStaleActiveSessions(
       continue;
     }
 
-    await saveStreamSession(completeStreamSession(session, now));
+    const markCount = await countTimestampMarksForSession(session.id);
+
+    if (markCount === 0) {
+      await deleteStreamSession(session.id);
+    } else {
+      await saveStreamSession(completeStreamSession(session, now));
+    }
   }
 }
 
@@ -88,6 +97,7 @@ export function useLiveSession(): UseLiveSessionResult {
   const [lastCompletedSession, setLastCompletedSession] =
     useState<StreamSession | null>(null);
   const [marks, setMarks] = useState<TimestampMark[]>([]);
+  const [noticeMessage, setNoticeMessage] = useState<string | null>(null);
   const activeSessionRef = useRef<StreamSession | null>(null);
   const addMarkRef = useRef<() => Promise<void>>(async () => undefined);
   const hotkeysSuspendedRef = useRef(false);
@@ -220,6 +230,7 @@ export function useLiveSession(): UseLiveSessionResult {
       setErrorMessage(null);
       setLastCompletedSession(null);
       setMarks([]);
+      setNoticeMessage(null);
     } catch (error) {
       console.error(error);
       setErrorMessage("Could not save stream");
@@ -235,6 +246,19 @@ export function useLiveSession(): UseLiveSessionResult {
     }
 
     try {
+      const markCount = await countTimestampMarksForSession(currentSession.id);
+
+      if (markCount === 0) {
+        await deleteStreamSession(currentSession.id);
+        setLastCompletedSession(null);
+        setElapsedMs(0);
+        setErrorMessage(null);
+        setActiveSession(null);
+        setMarks([]);
+        setNoticeMessage("Stream not saved because no marks were added");
+        return;
+      }
+
       const completedSession = completeStreamSession(currentSession, now);
 
       await saveStreamSession(completedSession);
@@ -242,6 +266,7 @@ export function useLiveSession(): UseLiveSessionResult {
       setElapsedMs(0);
       setErrorMessage(null);
       setActiveSession(null);
+      setNoticeMessage(null);
     } catch (error) {
       console.error(error);
       setErrorMessage("Could not save stream");
@@ -449,6 +474,7 @@ export function useLiveSession(): UseLiveSessionResult {
     hotkeys,
     lastCompletedSession,
     marks,
+    noticeMessage,
     setHotkeysSuspended,
     status:
       errorMessage !== null

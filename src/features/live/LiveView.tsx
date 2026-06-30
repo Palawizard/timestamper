@@ -12,6 +12,7 @@ export function LiveView() {
     errorMessage,
     hotkeys,
     marks,
+    noticeMessage,
     status,
     startSession,
     stopSession,
@@ -32,7 +33,7 @@ export function LiveView() {
               ? "Loading"
               : status === "running"
                 ? "Stream running"
-                : "Ready"}
+                : (noticeMessage ?? "Ready")}
         </p>
       </div>
       <dl className="hotkey-list" aria-label="Current hotkeys">
