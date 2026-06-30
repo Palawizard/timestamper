@@ -91,8 +91,9 @@ Les releases sont publiées sur [GitHub Releases](https://github.com/Palawizard/
 | Fichier                       | Description                                     |
 | ----------------------------- | ----------------------------------------------- |
 | `Timestamper_*_x64-setup.exe` | Installateur NSIS Windows (utilisateur courant) |
-| `Timestamper_*_x64_en-US.msi` | Installateur MSI Windows                        |
 | `release-checksums.txt`       | Empreintes SHA-256 des artefacts (si présent)   |
+
+> La beta publie l'installateur NSIS uniquement — WiX/MSI n'accepte pas encore le suffixe de version `beta`.
 
 **Prérequis runtime** : Microsoft Edge WebView2 (installé automatiquement par l'installateur si nécessaire).
 
