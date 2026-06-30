@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import type { AppSettings } from "../../domain/settings";
 import {
   ObsConnectionController,
   type ObsConnectionState,
 } from "../../services/obsConnection";
+import type { ObsStreamState, ObsStreamStatus } from "../../services/obsClient";
 import { getOrCreateAppSettings } from "../../services/settingsRepository";
 import { subscribeToAppSettingsChanges } from "../../services/settingsEvents";
 import type { UseLiveSessionResult } from "../live/useLiveSession";
@@ -35,51 +36,46 @@ export function useObsIntegration(
   const [connectionState, setConnectionState] =
     useState<ObsConnectionState>("disabled");
   const [settings, setSettings] = useState<AppSettings | null>(null);
-  const activeSessionRef = useRef(liveSession.activeSession);
-  const liveSessionRef = useRef(liveSession);
+  const controllerRef = useRef<ObsConnectionController | null>(null);
+  const activeControlSourceRef = useRef(
+    liveSession.activeSession?.controlSource ?? null,
+  );
   const obsStreamingRef = useRef(false);
   const manualStopSuppressedRef = useRef(false);
   const isLiveSessionLoaded = liveSession.status !== "loading";
+  const onManualSessionStop = liveSession.onManualSessionStop;
 
-  activeSessionRef.current = liveSession.activeSession;
-  liveSessionRef.current = liveSession;
+  useEffect(() => {
+    activeControlSourceRef.current =
+      liveSession.activeSession?.controlSource ?? null;
+  }, [liveSession.activeSession]);
 
-  const controller = useMemo(
-    () =>
-      new ObsConnectionController({
-        onStateChange: setConnectionState,
-        onStreamState: (streamState) => {
-          if (streamState.outputActive) {
-            obsStreamingRef.current = true;
-          } else {
-            obsStreamingRef.current = false;
-          }
+  const handleStreamState = useEffectEvent(
+    (streamState: ObsStreamState | ObsStreamStatus) => {
+      obsStreamingRef.current = streamState.outputActive;
+      const action = getObsSessionAction(
+        streamState,
+        activeControlSourceRef.current,
+        manualStopSuppressedRef.current,
+      );
 
-          const currentSession = activeSessionRef.current;
-          const action = getObsSessionAction(
-            streamState,
-            currentSession?.controlSource ?? null,
-            manualStopSuppressedRef.current,
-          );
-
-          if (action.type === "start") {
-            const startedAt = new Date(
-              Date.now() - action.outputDuration,
-            ).toISOString();
-            void liveSessionRef.current.startSessionFromObs(startedAt);
-          } else if (action.type === "adopt") {
-            void liveSessionRef.current.adoptSessionForObs();
-          } else if (action.type === "stop") {
-            manualStopSuppressedRef.current = false;
-            void liveSessionRef.current.stopSessionFromObs(
-              action.showReconciliationNotice,
-            );
-          } else if (!streamState.outputActive) {
-            manualStopSuppressedRef.current = false;
-          }
-        },
-      }),
-    [],
+      if (action.type === "start") {
+        activeControlSourceRef.current = "obs";
+        const startedAt = new Date(
+          Date.now() - action.outputDuration,
+        ).toISOString();
+        void liveSession.startSessionFromObs(startedAt);
+      } else if (action.type === "adopt") {
+        activeControlSourceRef.current = "obs";
+        void liveSession.adoptSessionForObs();
+      } else if (action.type === "stop") {
+        activeControlSourceRef.current = null;
+        manualStopSuppressedRef.current = false;
+        void liveSession.stopSessionFromObs(action.showReconciliationNotice);
+      } else if (!streamState.outputActive) {
+        manualStopSuppressedRef.current = false;
+      }
+    },
   );
 
   useEffect(() => {
@@ -106,43 +102,44 @@ export function useObsIntegration(
   }, []);
 
   useEffect(() => {
-    return liveSession.onManualSessionStop(() => {
+    return onManualSessionStop(() => {
       if (obsStreamingRef.current) {
         manualStopSuppressedRef.current = true;
+        activeControlSourceRef.current = null;
       }
     });
-  }, [liveSession.onManualSessionStop]);
+  }, [onManualSessionStop]);
 
   useEffect(() => {
+    const controller = new ObsConnectionController({
+      onStateChange: setConnectionState,
+      onStreamState: handleStreamState,
+    });
+    controllerRef.current = controller;
+
     if (settings === null || !settings.obsEnabled || !isLiveSessionLoaded) {
       controller.stop();
-      return;
+    } else {
+      controller.start({
+        host: settings.obsHost,
+        password: settings.obsPassword,
+        port: settings.obsPort,
+      });
     }
 
-    controller.start({
-      host: settings.obsHost,
-      password: settings.obsPassword,
-      port: settings.obsPort,
-    });
+    return () => {
+      if (controllerRef.current === controller) {
+        controllerRef.current = null;
+      }
 
-    return () => controller.stop();
-  }, [
-    controller,
-    isLiveSessionLoaded,
-    settings?.obsEnabled,
-    settings?.obsHost,
-    settings?.obsPassword,
-    settings?.obsPort,
-  ]);
-
-  useEffect(() => () => controller.stop(), [controller]);
-
-  const retry = useCallback(() => controller.retry(), [controller]);
+      controller.stop();
+    };
+  }, [isLiveSessionLoaded, settings]);
 
   return {
     enabled: settings?.obsEnabled ?? false,
     message: getConnectionMessage(connectionState),
-    retry,
+    retry: () => controllerRef.current?.retry(),
     state: connectionState,
   };
 }

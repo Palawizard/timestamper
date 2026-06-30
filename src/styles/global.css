@@ -527,6 +527,34 @@ ul {
   font-weight: 650;
 }
 
+.field input:not(.hotkey-input) {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid #cfd6e0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #ffffff;
+  color: #25313f;
+}
+
+.field input:not(.hotkey-input):disabled {
+  background: #f2f4f7;
+  color: #667085;
+}
+
+.toggle-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #25313f;
+  font-weight: 650;
+}
+
+.toggle-field input {
+  width: 18px;
+  height: 18px;
+}
+
 .button-danger {
   border-color: #b42318;
   background: #b42318;
