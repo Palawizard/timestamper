@@ -43,6 +43,7 @@ export type LiveSessionState = {
 
 export type UseLiveSessionResult = LiveSessionState & {
   addMark: () => Promise<void>;
+  setHotkeysSuspended: (isSuspended: boolean) => void;
   startSession: () => Promise<void>;
   stopSession: () => Promise<void>;
 };
@@ -82,6 +83,7 @@ export function useLiveSession(): UseLiveSessionResult {
     addMarkHotkey: DEFAULT_ADD_MARK_HOTKEY,
     startStopHotkey: DEFAULT_START_STOP_HOTKEY,
   });
+  const [hotkeysSuspended, setHotkeysSuspended] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [lastCompletedSession, setLastCompletedSession] =
     useState<StreamSession | null>(null);
@@ -271,6 +273,10 @@ export function useLiveSession(): UseLiveSessionResult {
     let isCurrent = true;
 
     async function registerHotkeys() {
+      if (hotkeysSuspended) {
+        return;
+      }
+
       const currentRegistration = registeredHotkeysRef.current;
 
       if (
@@ -381,7 +387,11 @@ export function useLiveSession(): UseLiveSessionResult {
           ]);
         });
     };
-  }, [hotkeys.addMarkHotkey, hotkeys.startStopHotkey]);
+  }, [
+    hotkeys.addMarkHotkey,
+    hotkeys.startStopHotkey,
+    hotkeysSuspended,
+  ]);
 
   useEffect(() => {
     let isCurrent = true;
@@ -425,6 +435,7 @@ export function useLiveSession(): UseLiveSessionResult {
     hotkeys,
     lastCompletedSession,
     marks,
+    setHotkeysSuspended,
     status:
       errorMessage !== null
         ? "error"

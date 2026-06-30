@@ -345,8 +345,15 @@ ul {
 }
 
 .form-feedback {
-  color: #9f1f1f;
   font-weight: 650;
+}
+
+.form-feedback-error {
+  color: #9f1f1f;
+}
+
+.form-feedback-success {
+  color: #18794e;
 }
 
 @media (max-width: 720px) {

@@ -42,4 +42,26 @@ describe("HotkeyInput", () => {
 
     expect(input.value).toBe("Ctrl+...");
   });
+
+  it("reports when shortcut capture starts and stops", () => {
+    const onCaptureChange = vi.fn();
+
+    render(
+      <HotkeyInput
+        id="shortcut"
+        label="Shortcut"
+        value="F9"
+        onCaptureChange={onCaptureChange}
+        onChange={() => undefined}
+      />,
+    );
+
+    const input = screen.getByLabelText("Shortcut");
+
+    fireEvent.focus(input);
+    fireEvent.blur(input);
+
+    expect(onCaptureChange).toHaveBeenNthCalledWith(1, true);
+    expect(onCaptureChange).toHaveBeenNthCalledWith(2, false);
+  });
 });

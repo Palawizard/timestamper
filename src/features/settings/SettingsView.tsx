@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Button } from "../../components/Button";
 import { HotkeyInput } from "../../components/HotkeyInput";
+import { useLiveSessionContext } from "../live/liveSessionContext";
 import {
   DEFAULT_ADD_MARK_HOTKEY,
   DEFAULT_START_STOP_HOTKEY,
@@ -13,15 +14,25 @@ import {
 } from "../../services/settingsEvents";
 import { validateHotkeys } from "./hotkeyValidation";
 
+type Feedback = {
+  message: string;
+  tone: "error" | "success";
+};
+
 export function SettingsView() {
   const [addMarkHotkey, setAddMarkHotkey] = useState(DEFAULT_ADD_MARK_HOTKEY);
-  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [savedSettings, setSavedSettings] = useState<Awaited<
     ReturnType<typeof getOrCreateAppSettings>
   > | null>(null);
   const [startStopHotkey, setStartStopHotkey] = useState(
     DEFAULT_START_STOP_HOTKEY,
   );
+  const { setHotkeysSuspended } = useLiveSessionContext();
+
+  useEffect(() => {
+    return () => setHotkeysSuspended(false);
+  }, [setHotkeysSuspended]);
 
   useEffect(() => {
     let isCurrent = true;
@@ -57,7 +68,7 @@ export function SettingsView() {
     const validation = validateHotkeys(startStopHotkey, addMarkHotkey);
 
     if (!validation.isValid) {
-      setFeedbackMessage(validation.message);
+      setFeedback({ message: validation.message, tone: "error" });
       return;
     }
 
@@ -75,10 +86,10 @@ export function SettingsView() {
       setSavedSettings(nextSettings);
       setAddMarkHotkey(nextSettings.addMarkHotkey);
       setStartStopHotkey(nextSettings.startStopHotkey);
-      setFeedbackMessage("Shortcut saved");
+      setFeedback({ message: "Shortcut saved", tone: "success" });
     } catch (error) {
       console.error(error);
-      setFeedbackMessage("Could not save settings");
+      setFeedback({ message: "Could not save settings", tone: "error" });
     }
   }
 
@@ -89,7 +100,7 @@ export function SettingsView() {
 
     setAddMarkHotkey(savedSettings.addMarkHotkey);
     setStartStopHotkey(savedSettings.startStopHotkey);
-    setFeedbackMessage(null);
+    setFeedback(null);
   }
 
   return (
@@ -107,12 +118,14 @@ export function SettingsView() {
             id="start-stop-hotkey"
             label="Start or stop stream"
             value={startStopHotkey}
+            onCaptureChange={setHotkeysSuspended}
             onChange={setStartStopHotkey}
           />
           <HotkeyInput
             id="add-mark-hotkey"
             label="Add mark"
             value={addMarkHotkey}
+            onCaptureChange={setHotkeysSuspended}
             onChange={setAddMarkHotkey}
           />
         </section>
@@ -124,8 +137,10 @@ export function SettingsView() {
             Cancel
           </Button>
         </div>
-        {feedbackMessage === null ? null : (
-          <p className="form-feedback">{feedbackMessage}</p>
+        {feedback === null ? null : (
+          <p className={`form-feedback form-feedback-${feedback.tone}`}>
+            {feedback.message}
+          </p>
         )}
       </form>
     </section>

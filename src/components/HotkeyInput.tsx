@@ -7,17 +7,25 @@ import {
 type HotkeyInputProps = {
   id: string;
   label: string;
+  onCaptureChange?: (isCapturing: boolean) => void;
   onChange: (value: string) => void;
   value: string;
 };
 
-export function HotkeyInput({ id, label, onChange, value }: HotkeyInputProps) {
+export function HotkeyInput({
+  id,
+  label,
+  onCaptureChange,
+  onChange,
+  value,
+}: HotkeyInputProps) {
   const [isCapturing, setIsCapturing] = useState(false);
   const [preview, setPreview] = useState("Press keys...");
 
   function stopCapturing() {
     setIsCapturing(false);
     setPreview("Press keys...");
+    onCaptureChange?.(false);
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
@@ -52,7 +60,10 @@ export function HotkeyInput({ id, label, onChange, value }: HotkeyInputProps) {
         value={isCapturing ? preview : value}
         readOnly
         onBlur={stopCapturing}
-        onFocus={() => setIsCapturing(true)}
+        onFocus={() => {
+          setIsCapturing(true);
+          onCaptureChange?.(true);
+        }}
         onKeyDown={handleKeyDown}
         aria-describedby={`${id}-hint`}
       />
