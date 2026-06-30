@@ -317,9 +317,21 @@ ul {
   max-width: 360px;
 }
 
-.field span {
+.field label {
   color: #25313f;
   font-weight: 650;
+}
+
+.button-danger {
+  border-color: #b42318;
+  background: #b42318;
+  color: #ffffff;
+}
+
+.button-danger-outline {
+  border-color: #d92d20;
+  background: #ffffff;
+  color: #b42318;
 }
 
 .hotkey-input {
@@ -330,11 +342,64 @@ ul {
   padding: 8px 10px;
   background: #ffffff;
   color: #25313f;
+  cursor: pointer;
+}
+
+.hotkey-input:focus,
+.hotkey-input-capturing {
+  border-color: #315efb;
+  outline: 3px solid rgba(49, 94, 251, 0.16);
+}
+
+.field-hint {
+  color: #5f6b7a;
+  font-size: 0.78rem;
 }
 
 .form-feedback {
-  color: #9f1f1f;
   font-weight: 650;
+}
+
+.form-feedback-error {
+  color: #9f1f1f;
+}
+
+.form-feedback-success {
+  color: #18794e;
+}
+
+.confirmation-dialog {
+  width: min(420px, calc(100vw - 32px));
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.28);
+}
+
+.confirmation-dialog::backdrop {
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.confirmation-dialog-content {
+  display: grid;
+  gap: 12px;
+  padding: 24px;
+}
+
+.confirmation-dialog-content h3,
+.confirmation-dialog-content p {
+  margin: 0;
+}
+
+.confirmation-dialog-content p {
+  color: #5f6b7a;
+}
+
+.confirmation-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
 }
 
 @media (max-width: 720px) {

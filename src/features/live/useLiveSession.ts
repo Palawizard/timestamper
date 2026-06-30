@@ -9,6 +9,7 @@ import {
   type HotkeyCleanup,
 } from "../../services/hotkeys";
 import {
+  countTimestampMarksForSession,
   listTimestampMarksForSession,
   saveTimestampMark,
 } from "../../services/marksRepository";
@@ -19,6 +20,7 @@ import {
 } from "../../services/settingsRepository";
 import { subscribeToAppSettingsChanges } from "../../services/settingsEvents";
 import {
+  deleteStreamSession,
   getActiveStreamSession,
   listActiveStreamSessions,
   saveStreamSession,
@@ -38,11 +40,13 @@ export type LiveSessionState = {
   hotkeys: Pick<AppSettings, "addMarkHotkey" | "startStopHotkey">;
   lastCompletedSession: StreamSession | null;
   marks: TimestampMark[];
+  noticeMessage: string | null;
   status: LiveSessionStatus;
 };
 
 export type UseLiveSessionResult = LiveSessionState & {
   addMark: () => Promise<void>;
+  setHotkeysSuspended: (isSuspended: boolean) => void;
   startSession: () => Promise<void>;
   stopSession: () => Promise<void>;
 };
@@ -66,7 +70,13 @@ async function completeStaleActiveSessions(
       continue;
     }
 
-    await saveStreamSession(completeStreamSession(session, now));
+    const markCount = await countTimestampMarksForSession(session.id);
+
+    if (markCount === 0) {
+      await deleteStreamSession(session.id);
+    } else {
+      await saveStreamSession(completeStreamSession(session, now));
+    }
   }
 }
 
@@ -82,12 +92,16 @@ export function useLiveSession(): UseLiveSessionResult {
     addMarkHotkey: DEFAULT_ADD_MARK_HOTKEY,
     startStopHotkey: DEFAULT_START_STOP_HOTKEY,
   });
+  const [hotkeysSuspended, setHotkeysSuspendedState] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [lastCompletedSession, setLastCompletedSession] =
     useState<StreamSession | null>(null);
   const [marks, setMarks] = useState<TimestampMark[]>([]);
+  const [noticeMessage, setNoticeMessage] = useState<string | null>(null);
   const activeSessionRef = useRef<StreamSession | null>(null);
   const addMarkRef = useRef<() => Promise<void>>(async () => undefined);
+  const hotkeysSuspendedRef = useRef(false);
+  const hotkeyRegistrationTaskRef = useRef<Promise<void>>(Promise.resolve());
   const registeredHotkeysRef = useRef<RegisteredHotkeys | null>(null);
   const startSessionRef = useRef<() => Promise<void>>(async () => undefined);
   const stopSessionRef = useRef<() => Promise<void>>(async () => undefined);
@@ -95,6 +109,11 @@ export function useLiveSession(): UseLiveSessionResult {
   useEffect(() => {
     activeSessionRef.current = activeSession;
   }, [activeSession]);
+
+  const setHotkeysSuspended = useCallback((isSuspended: boolean) => {
+    hotkeysSuspendedRef.current = isSuspended;
+    setHotkeysSuspendedState(isSuspended);
+  }, []);
 
   useEffect(() => {
     let isCurrent = true;
@@ -211,6 +230,7 @@ export function useLiveSession(): UseLiveSessionResult {
       setErrorMessage(null);
       setLastCompletedSession(null);
       setMarks([]);
+      setNoticeMessage(null);
     } catch (error) {
       console.error(error);
       setErrorMessage("Could not save stream");
@@ -226,6 +246,19 @@ export function useLiveSession(): UseLiveSessionResult {
     }
 
     try {
+      const markCount = await countTimestampMarksForSession(currentSession.id);
+
+      if (markCount === 0) {
+        await deleteStreamSession(currentSession.id);
+        setLastCompletedSession(null);
+        setElapsedMs(0);
+        setErrorMessage(null);
+        setActiveSession(null);
+        setMarks([]);
+        setNoticeMessage("Stream not saved because no marks were added");
+        return;
+      }
+
       const completedSession = completeStreamSession(currentSession, now);
 
       await saveStreamSession(completedSession);
@@ -233,6 +266,7 @@ export function useLiveSession(): UseLiveSessionResult {
       setElapsedMs(0);
       setErrorMessage(null);
       setActiveSession(null);
+      setNoticeMessage(null);
     } catch (error) {
       console.error(error);
       setErrorMessage("Could not save stream");
@@ -270,6 +304,10 @@ export function useLiveSession(): UseLiveSessionResult {
     let isCurrent = true;
 
     async function registerHotkeys() {
+      if (hotkeysSuspended) {
+        return;
+      }
+
       const currentRegistration = registeredHotkeysRef.current;
 
       if (
@@ -286,6 +324,10 @@ export function useLiveSession(): UseLiveSessionResult {
           currentRegistration?.startStopHotkey === hotkeys.startStopHotkey
             ? currentRegistration.startStopCleanup
             : await registerStartStopHotkey(hotkeys.startStopHotkey, () => {
+                if (hotkeysSuspendedRef.current) {
+                  return;
+                }
+
                 if (activeSessionRef.current === null) {
                   void startSessionRef.current();
                   return;
@@ -302,6 +344,10 @@ export function useLiveSession(): UseLiveSessionResult {
           currentRegistration?.addMarkHotkey === hotkeys.addMarkHotkey
             ? currentRegistration.addMarkCleanup
             : await registerAddMarkHotkey(hotkeys.addMarkHotkey, () => {
+                if (hotkeysSuspendedRef.current) {
+                  return;
+                }
+
                 void addMarkRef.current();
               });
 
@@ -310,9 +356,9 @@ export function useLiveSession(): UseLiveSessionResult {
         }
 
         if (!isCurrent) {
-          for (const cleanup of pendingCleanups) {
-            void cleanup();
-          }
+          await Promise.allSettled(
+            pendingCleanups.map((cleanup) => cleanup()),
+          );
           return;
         }
 
@@ -340,9 +386,9 @@ export function useLiveSession(): UseLiveSessionResult {
       } catch (error) {
         console.error(error);
 
-        for (const cleanup of pendingCleanups) {
-          void cleanup();
-        }
+        await Promise.allSettled(
+          pendingCleanups.map((cleanup) => cleanup()),
+        );
 
         if (currentRegistration !== null) {
           setHotkeys({
@@ -355,26 +401,36 @@ export function useLiveSession(): UseLiveSessionResult {
       }
     }
 
-    void registerHotkeys();
+    // React Strict Mode remounts effects in development. Serializing native
+    // registration prevents the remount from racing the canceled first pass.
+    hotkeyRegistrationTaskRef.current = hotkeyRegistrationTaskRef.current.then(
+      registerHotkeys,
+      registerHotkeys,
+    );
 
     return () => {
       isCurrent = false;
+
+      hotkeyRegistrationTaskRef.current =
+        hotkeyRegistrationTaskRef.current.then(async () => {
+          const currentRegistration = registeredHotkeysRef.current;
+
+          if (currentRegistration === null) {
+            return;
+          }
+
+          registeredHotkeysRef.current = null;
+          await Promise.allSettled([
+            currentRegistration.addMarkCleanup(),
+            currentRegistration.startStopCleanup(),
+          ]);
+        });
     };
-  }, [hotkeys.addMarkHotkey, hotkeys.startStopHotkey]);
-
-  useEffect(() => {
-    return () => {
-      const currentRegistration = registeredHotkeysRef.current;
-
-      if (currentRegistration === null) {
-        return;
-      }
-
-      void currentRegistration.addMarkCleanup();
-      void currentRegistration.startStopCleanup();
-      registeredHotkeysRef.current = null;
-    };
-  }, []);
+  }, [
+    hotkeys.addMarkHotkey,
+    hotkeys.startStopHotkey,
+    hotkeysSuspended,
+  ]);
 
   useEffect(() => {
     let isCurrent = true;
@@ -418,6 +474,8 @@ export function useLiveSession(): UseLiveSessionResult {
     hotkeys,
     lastCompletedSession,
     marks,
+    noticeMessage,
+    setHotkeysSuspended,
     status:
       errorMessage !== null
         ? "error"

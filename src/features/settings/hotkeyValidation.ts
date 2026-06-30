@@ -61,12 +61,6 @@ function hasMainKey(value: string): boolean {
   );
 }
 
-function hasModifier(value: string): boolean {
-  const parts = value.split("+").map((part) => part.trim().toLowerCase());
-
-  return parts.slice(0, -1).some((part) => MODIFIERS.has(part));
-}
-
 export function validateHotkeys(
   startStopHotkey: string,
   addMarkHotkey: string,
@@ -87,13 +81,6 @@ export function validateHotkeys(
     values.startStopHotkey.toLowerCase() === values.addMarkHotkey.toLowerCase()
   ) {
     return { isValid: false, message: "Shortcuts must be different" };
-  }
-
-  if (
-    !hasModifier(values.startStopHotkey) ||
-    !hasModifier(values.addMarkHotkey)
-  ) {
-    return { isValid: false, message: "Shortcut needs a modifier" };
   }
 
   if (

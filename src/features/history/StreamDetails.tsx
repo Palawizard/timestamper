@@ -8,6 +8,7 @@ type StreamDetailsProps = {
   marks: TimestampMark[];
   onCopyAllMarks: () => void;
   onCopyTimestamp: (timestamp: string) => void;
+  onDelete: () => void;
   onExportCsv: () => void;
   onExportJson: () => void;
 };
@@ -24,6 +25,7 @@ export function StreamDetails({
   marks,
   onCopyAllMarks,
   onCopyTimestamp,
+  onDelete,
   onExportCsv,
   onExportJson,
 }: StreamDetailsProps) {
@@ -33,6 +35,9 @@ export function StreamDetails({
     <section className="stream-details" aria-labelledby="stream-details-title">
       <div className="section-header">
         <h3 id="stream-details-title">{stream.title ?? "Stream details"}</h3>
+        <Button className="button-danger-outline" onClick={onDelete}>
+          Delete stream
+        </Button>
       </div>
       <dl className="summary-list">
         <div>

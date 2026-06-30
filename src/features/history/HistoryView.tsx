@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { EmptyState } from "../../components/EmptyState";
+import { ConfirmationDialog } from "../../components/ConfirmationDialog";
 import type { TimestampMark } from "../../domain/timestampMark";
 import { downloadTextFile } from "../../services/download";
 import {
@@ -13,7 +14,10 @@ import {
   listTimestampMarksForSession,
 } from "../../services/marksRepository";
 import { copyTextToClipboard } from "../../services/clipboard";
-import { listCompletedStreamSessions } from "../../services/sessionsRepository";
+import {
+  deleteStreamSession,
+  listCompletedStreamSessions,
+} from "../../services/sessionsRepository";
 import {
   createStreamHistoryItem,
   type StreamHistoryItem,
@@ -24,10 +28,13 @@ import { StreamList } from "./StreamList";
 export function HistoryView() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [marks, setMarks] = useState<TimestampMark[]>([]);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [selectedStreamId, setSelectedStreamId] = useState<string | null>(null);
   const [streams, setStreams] = useState<StreamHistoryItem[]>([]);
+  const [streamPendingDeletion, setStreamPendingDeletion] =
+    useState<StreamHistoryItem | null>(null);
   const selectedStream =
     streams.find((item) => item.stream.id === selectedStreamId) ?? null;
 
@@ -152,6 +159,40 @@ export function HistoryView() {
     setStatusMessage("JSON exported");
   }
 
+  async function handleDeleteStream() {
+    if (streamPendingDeletion === null) {
+      return;
+    }
+
+    setIsDeleting(true);
+
+    try {
+      const deletedStreamId = streamPendingDeletion.stream.id;
+
+      await deleteStreamSession(deletedStreamId);
+
+      const remainingStreams = streams.filter(
+        (item) => item.stream.id !== deletedStreamId,
+      );
+
+      setStreams(remainingStreams);
+      setSelectedStreamId((currentId) =>
+        currentId === deletedStreamId
+          ? (remainingStreams[0]?.stream.id ?? null)
+          : currentId,
+      );
+      setMarks([]);
+      setStreamPendingDeletion(null);
+      setErrorMessage(null);
+      setStatusMessage("Stream deleted");
+    } catch (error) {
+      console.error(error);
+      setErrorMessage("Could not delete stream");
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
   return (
     <section className="view" aria-labelledby="history-title">
       <div className="view-header">
@@ -181,12 +222,22 @@ export function HistoryView() {
               marks={marks}
               onCopyAllMarks={handleCopyAllMarks}
               onCopyTimestamp={handleCopyTimestamp}
+              onDelete={() => setStreamPendingDeletion(selectedStream)}
               onExportCsv={handleExportCsv}
               onExportJson={handleExportJson}
             />
           )}
         </div>
       ) : null}
+      <ConfirmationDialog
+        confirmLabel="Delete stream"
+        isConfirming={isDeleting}
+        message="This permanently deletes the stream and all of its marks."
+        onCancel={() => setStreamPendingDeletion(null)}
+        onConfirm={() => void handleDeleteStream()}
+        open={streamPendingDeletion !== null}
+        title="Delete this stream?"
+      />
     </section>
   );
 }

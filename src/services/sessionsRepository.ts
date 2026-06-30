@@ -158,3 +158,12 @@ export async function listCompletedStreamSessions(
 
   return rows.map(mapStreamSessionRow);
 }
+
+export async function deleteStreamSession(
+  id: string,
+  client?: DatabaseClient,
+): Promise<void> {
+  const database = await getClient(client);
+
+  await database.execute(`DELETE FROM stream_sessions WHERE id = $1`, [id]);
+}
