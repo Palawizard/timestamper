@@ -12,9 +12,7 @@ dist
 dist-ssr
 *.local
 
-PROJECT_DOCUMENTATION.md
-AGENT_FOLLOW_UP.md
-DEVELOPMENT_PLAN.md
+.cursor/
 
 # Editor directories and files
 .vscode/*
