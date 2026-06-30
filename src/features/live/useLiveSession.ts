@@ -83,13 +83,14 @@ export function useLiveSession(): UseLiveSessionResult {
     addMarkHotkey: DEFAULT_ADD_MARK_HOTKEY,
     startStopHotkey: DEFAULT_START_STOP_HOTKEY,
   });
-  const [hotkeysSuspended, setHotkeysSuspended] = useState(false);
+  const [hotkeysSuspended, setHotkeysSuspendedState] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [lastCompletedSession, setLastCompletedSession] =
     useState<StreamSession | null>(null);
   const [marks, setMarks] = useState<TimestampMark[]>([]);
   const activeSessionRef = useRef<StreamSession | null>(null);
   const addMarkRef = useRef<() => Promise<void>>(async () => undefined);
+  const hotkeysSuspendedRef = useRef(false);
   const hotkeyRegistrationTaskRef = useRef<Promise<void>>(Promise.resolve());
   const registeredHotkeysRef = useRef<RegisteredHotkeys | null>(null);
   const startSessionRef = useRef<() => Promise<void>>(async () => undefined);
@@ -98,6 +99,11 @@ export function useLiveSession(): UseLiveSessionResult {
   useEffect(() => {
     activeSessionRef.current = activeSession;
   }, [activeSession]);
+
+  const setHotkeysSuspended = useCallback((isSuspended: boolean) => {
+    hotkeysSuspendedRef.current = isSuspended;
+    setHotkeysSuspendedState(isSuspended);
+  }, []);
 
   useEffect(() => {
     let isCurrent = true;
@@ -293,6 +299,10 @@ export function useLiveSession(): UseLiveSessionResult {
           currentRegistration?.startStopHotkey === hotkeys.startStopHotkey
             ? currentRegistration.startStopCleanup
             : await registerStartStopHotkey(hotkeys.startStopHotkey, () => {
+                if (hotkeysSuspendedRef.current) {
+                  return;
+                }
+
                 if (activeSessionRef.current === null) {
                   void startSessionRef.current();
                   return;
@@ -309,6 +319,10 @@ export function useLiveSession(): UseLiveSessionResult {
           currentRegistration?.addMarkHotkey === hotkeys.addMarkHotkey
             ? currentRegistration.addMarkCleanup
             : await registerAddMarkHotkey(hotkeys.addMarkHotkey, () => {
+                if (hotkeysSuspendedRef.current) {
+                  return;
+                }
+
                 void addMarkRef.current();
               });
 
