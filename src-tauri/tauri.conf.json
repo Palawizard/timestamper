@@ -26,7 +26,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["nsis"],
     "category": "Utility",
     "shortDescription": "Save timestamp marks while you stream.",
     "longDescription": "Timestamper is a local desktop utility for starting stream timers, saving precise timestamp marks with global shortcuts, and reviewing completed streams.",
