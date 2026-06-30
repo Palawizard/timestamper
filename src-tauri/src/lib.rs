@@ -1,8 +1,7 @@
 use tauri_plugin_sql::{Migration, MigrationKind};
 
-#[cfg_attr(mobile, tauri::mobile_entry_point)]
-pub fn run() {
-    let migrations = vec![
+fn app_migrations() -> Vec<Migration> {
+    vec![
         Migration {
             version: 1,
             description: "create initial timestamp tables",
@@ -60,7 +59,12 @@ pub fn run() {
             ",
             kind: MigrationKind::Up,
         },
-    ];
+    ]
+}
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run() {
+    let migrations = app_migrations();
 
     tauri::Builder::default()
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
@@ -71,4 +75,24 @@ pub fn run() {
         )
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::app_migrations;
+
+    #[test]
+    fn keeps_obs_migrations_separate_from_the_initial_schema() {
+        let migrations = app_migrations();
+
+        assert_eq!(migrations.len(), 3);
+        assert_eq!(migrations[0].version, 1);
+        assert!(!migrations[0].sql.contains("obs_enabled"));
+        assert_eq!(migrations[1].version, 2);
+        assert!(migrations[1].sql.contains("obs_enabled"));
+        assert!(migrations[1].sql.contains("DEFAULT 4455"));
+        assert_eq!(migrations[2].version, 3);
+        assert!(migrations[2].sql.contains("control_source"));
+        assert!(migrations[2].sql.contains("DEFAULT 'manual'"));
+    }
 }

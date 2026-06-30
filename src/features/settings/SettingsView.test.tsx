@@ -4,12 +4,17 @@ import { LiveSessionContext } from "../live/liveSessionContext";
 import { SettingsView } from "./SettingsView";
 import { ObsIntegrationContext } from "../obs/obsIntegrationContext";
 
-const { getOrCreateAppSettings, saveAppSettings, testObsConnection } =
-  vi.hoisted(() => ({
-    getOrCreateAppSettings: vi.fn(),
-    saveAppSettings: vi.fn(),
-    testObsConnection: vi.fn(),
-  }));
+const {
+  getOrCreateAppSettings,
+  isObsAuthenticationError,
+  saveAppSettings,
+  testObsConnection,
+} = vi.hoisted(() => ({
+  getOrCreateAppSettings: vi.fn(),
+  isObsAuthenticationError: vi.fn(),
+  saveAppSettings: vi.fn(),
+  testObsConnection: vi.fn(),
+}));
 
 vi.mock("../../services/settingsRepository", () => ({
   DEFAULT_ADD_MARK_HOTKEY: "F10",
@@ -19,7 +24,7 @@ vi.mock("../../services/settingsRepository", () => ({
 }));
 
 vi.mock("../../services/obsClient", () => ({
-  isObsAuthenticationError: vi.fn(() => false),
+  isObsAuthenticationError,
   testObsConnection,
 }));
 
@@ -60,6 +65,7 @@ describe("SettingsView", () => {
     getOrCreateAppSettings.mockReset();
     saveAppSettings.mockReset();
     testObsConnection.mockReset();
+    isObsAuthenticationError.mockReset().mockReturnValue(false);
   });
 
   function renderSettings() {
@@ -171,6 +177,31 @@ describe("SettingsView", () => {
 
     expect(await screen.findByText("Enter the OBS password")).toBeTruthy();
     expect(saveAppSettings).not.toHaveBeenCalled();
+  });
+
+  it("shows authentication failure without exposing the password", async () => {
+    getOrCreateAppSettings.mockResolvedValue({
+      addMarkHotkey: "F10",
+      startStopHotkey: "F9",
+      timestampFormat: "hh:mm:ss",
+      obsEnabled: true,
+      obsHost: "127.0.0.1",
+      obsPort: 4455,
+      obsPassword: "private-password",
+      createdAt: "2026-06-30T15:00:00.000Z",
+      updatedAt: "2026-06-30T15:00:00.000Z",
+    });
+    testObsConnection.mockRejectedValue({ code: 4009 });
+    isObsAuthenticationError.mockReturnValue(true);
+
+    renderSettings();
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Test connection" }),
+    );
+
+    expect(await screen.findByText("Authentication failed")).toBeTruthy();
+    expect(screen.queryByText("private-password")).toBeNull();
   });
 
   it("saves OBS settings with success feedback", async () => {
