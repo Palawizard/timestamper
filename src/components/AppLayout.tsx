@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import { formatTimestamp } from "../domain/timeFormat";
+import { useLiveSessionContext } from "../features/live/liveSessionContext";
 import { Button } from "./Button";
 import { type AppRoute, appRoutes } from "../app/routes";
 
@@ -13,6 +15,9 @@ export function AppLayout({
   children,
   onRouteChange,
 }: AppLayoutProps) {
+  const { activeSession, elapsedMs, status } = useLiveSessionContext();
+  const isRunning = activeSession !== null;
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -33,6 +38,22 @@ export function AppLayout({
             </Button>
           ))}
         </nav>
+        <div
+          className={`sidebar-status${isRunning ? " sidebar-status-active" : ""}`}
+          role="status"
+        >
+          <span className="status-dot" aria-hidden="true" />
+          <div>
+            <strong>
+              {isRunning
+                ? "Stream running"
+                : status === "error"
+                  ? "Needs attention"
+                  : "Ready"}
+            </strong>
+            <span>{isRunning ? formatTimestamp(elapsedMs) : "Standby"}</span>
+          </div>
+        </div>
       </aside>
       <main className="content">{children}</main>
     </div>

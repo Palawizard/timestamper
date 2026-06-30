@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Button } from "../../components/Button";
 import { HotkeyInput } from "../../components/HotkeyInput";
+import { StatusPanel } from "../../components/StatusPanel";
 import { useLiveSessionContext } from "../live/liveSessionContext";
 import {
   DEFAULT_ADD_MARK_HOTKEY,
@@ -22,6 +23,9 @@ type Feedback = {
 export function SettingsView() {
   const [addMarkHotkey, setAddMarkHotkey] = useState(DEFAULT_ADD_MARK_HOTKEY);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [savedSettings, setSavedSettings] = useState<Awaited<
     ReturnType<typeof getOrCreateAppSettings>
   > | null>(null);
@@ -38,12 +42,28 @@ export function SettingsView() {
     let isCurrent = true;
 
     async function loadSettings() {
-      const settings = await getOrCreateAppSettings();
+      setIsLoading(true);
 
-      if (isCurrent) {
-        setSavedSettings(settings);
-        setAddMarkHotkey(settings.addMarkHotkey);
-        setStartStopHotkey(settings.startStopHotkey);
+      try {
+        const settings = await getOrCreateAppSettings();
+
+        if (isCurrent) {
+          setSavedSettings(settings);
+          setAddMarkHotkey(settings.addMarkHotkey);
+          setStartStopHotkey(settings.startStopHotkey);
+          setFeedback(null);
+        }
+      } catch (error) {
+        console.error(error);
+
+        if (isCurrent) {
+          setSavedSettings(null);
+          setFeedback({ message: "Could not load settings", tone: "error" });
+        }
+      } finally {
+        if (isCurrent) {
+          setIsLoading(false);
+        }
       }
     }
 
@@ -52,7 +72,7 @@ export function SettingsView() {
     return () => {
       isCurrent = false;
     };
-  }, []);
+  }, [loadAttempt]);
 
   useEffect(() => {
     return subscribeToAppSettingsChanges((settings) => {
@@ -65,6 +85,10 @@ export function SettingsView() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
+    if (isLoading || isSaving) {
+      return;
+    }
+
     const validation = validateHotkeys(startStopHotkey, addMarkHotkey);
 
     if (!validation.isValid) {
@@ -73,6 +97,7 @@ export function SettingsView() {
     }
 
     try {
+      setIsSaving(true);
       const now = new Date().toISOString();
       const nextSettings = {
         ...(savedSettings ?? (await getOrCreateAppSettings())),
@@ -90,6 +115,8 @@ export function SettingsView() {
     } catch (error) {
       console.error(error);
       setFeedback({ message: "Could not save settings", tone: "error" });
+    } finally {
+      setIsSaving(false);
     }
   }
 
@@ -106,43 +133,67 @@ export function SettingsView() {
   return (
     <section className="view" aria-labelledby="settings-title">
       <div className="view-header">
-        <h2 id="settings-title">Settings</h2>
+        <div className="view-title-row">
+          <h2 id="settings-title">Settings</h2>
+          <span className="status-badge">Local</span>
+        </div>
         <p>Hotkeys</p>
       </div>
-      <form className="settings-form" onSubmit={handleSubmit}>
-        <section className="settings-section" aria-labelledby="hotkeys-title">
-          <div className="section-header">
-            <h3 id="hotkeys-title">Hotkeys</h3>
+      {isLoading ? (
+        <StatusPanel
+          title="Loading settings"
+          message="Reading your saved shortcuts."
+          tone="loading"
+        />
+      ) : savedSettings === null ? (
+        <StatusPanel
+          title="Could not load settings"
+          message="Your shortcuts were not changed."
+          tone="error"
+          actionLabel="Retry"
+          onAction={() => setLoadAttempt((attempt) => attempt + 1)}
+        />
+      ) : (
+        <form className="settings-form" onSubmit={handleSubmit}>
+          <section className="settings-section" aria-labelledby="hotkeys-title">
+            <div className="section-header">
+              <h3 id="hotkeys-title">Hotkeys</h3>
+            </div>
+            <HotkeyInput
+              id="start-stop-hotkey"
+              label="Start or stop stream"
+              value={startStopHotkey}
+              disabled={isSaving}
+              onCaptureChange={setHotkeysSuspended}
+              onChange={setStartStopHotkey}
+            />
+            <HotkeyInput
+              id="add-mark-hotkey"
+              label="Add mark"
+              value={addMarkHotkey}
+              disabled={isSaving}
+              onCaptureChange={setHotkeysSuspended}
+              onChange={setAddMarkHotkey}
+            />
+          </section>
+          <div className="toolbar">
+            <Button type="submit" variant="primary" disabled={isSaving}>
+              {isSaving ? "Saving..." : "Save"}
+            </Button>
+            <Button type="button" disabled={isSaving} onClick={handleCancel}>
+              Cancel
+            </Button>
           </div>
-          <HotkeyInput
-            id="start-stop-hotkey"
-            label="Start or stop stream"
-            value={startStopHotkey}
-            onCaptureChange={setHotkeysSuspended}
-            onChange={setStartStopHotkey}
-          />
-          <HotkeyInput
-            id="add-mark-hotkey"
-            label="Add mark"
-            value={addMarkHotkey}
-            onCaptureChange={setHotkeysSuspended}
-            onChange={setAddMarkHotkey}
-          />
-        </section>
-        <div className="toolbar">
-          <Button type="submit" variant="primary">
-            Save
-          </Button>
-          <Button type="button" onClick={handleCancel}>
-            Cancel
-          </Button>
-        </div>
-        {feedback === null ? null : (
-          <p className={`form-feedback form-feedback-${feedback.tone}`}>
-            {feedback.message}
-          </p>
-        )}
-      </form>
+          {feedback === null ? null : (
+            <p
+              className={`form-feedback form-feedback-${feedback.tone}`}
+              role={feedback.tone === "error" ? "alert" : "status"}
+            >
+              {feedback.message}
+            </p>
+          )}
+        </form>
+      )}
     </section>
   );
 }

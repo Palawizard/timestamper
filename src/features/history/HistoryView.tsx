@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { EmptyState } from "../../components/EmptyState";
 import { ConfirmationDialog } from "../../components/ConfirmationDialog";
+import { StatusPanel } from "../../components/StatusPanel";
 import type { TimestampMark } from "../../domain/timestampMark";
 import { downloadTextFile } from "../../services/download";
 import {
@@ -28,7 +29,9 @@ import { StreamList } from "./StreamList";
 export function HistoryView() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMarks, setIsLoadingMarks] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [marks, setMarks] = useState<TimestampMark[]>([]);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [selectedStreamId, setSelectedStreamId] = useState<string | null>(null);
@@ -42,6 +45,8 @@ export function HistoryView() {
     let isCurrent = true;
 
     async function loadStreams() {
+      setIsLoading(true);
+
       try {
         const completedStreams = await listCompletedStreamSessions();
         const historyItems = await Promise.all(
@@ -78,7 +83,7 @@ export function HistoryView() {
     return () => {
       isCurrent = false;
     };
-  }, []);
+  }, [loadAttempt]);
 
   useEffect(() => {
     let isCurrent = true;
@@ -86,8 +91,12 @@ export function HistoryView() {
     async function loadMarks() {
       if (selectedStreamId === null) {
         setMarks([]);
+        setIsLoadingMarks(false);
         return;
       }
+
+      setMarks([]);
+      setIsLoadingMarks(true);
 
       try {
         const selectedMarks =
@@ -102,6 +111,10 @@ export function HistoryView() {
 
         if (isCurrent) {
           setErrorMessage("Could not load marks");
+        }
+      } finally {
+        if (isCurrent) {
+          setIsLoadingMarks(false);
         }
       }
     }
@@ -196,20 +209,43 @@ export function HistoryView() {
   return (
     <section className="view" aria-labelledby="history-title">
       <div className="view-header">
-        <h2 id="history-title">History</h2>
+        <div className="view-title-row">
+          <h2 id="history-title">History</h2>
+          {streams.length === 0 ? null : (
+            <span className="status-badge">
+              {streams.length} {streams.length === 1 ? "stream" : "streams"}
+            </span>
+          )}
+        </div>
         <p>
           {errorMessage ?? statusMessage ?? (isLoading ? "Loading" : "Streams")}
         </p>
       </div>
-      {streams.length === 0 && !isLoading ? (
+      {errorMessage !== null && streams.length === 0 && !isLoading ? (
+        <StatusPanel
+          title="Could not load history"
+          message="Your saved streams were not changed."
+          tone="error"
+          actionLabel="Retry"
+          onAction={() => setLoadAttempt((attempt) => attempt + 1)}
+        />
+      ) : null}
+      {streams.length === 0 && !isLoading && errorMessage === null ? (
         <section className="history-empty" aria-label="Streams">
-          <EmptyState title="No streams yet" />
+          <EmptyState
+            title="No streams yet"
+            description="Completed streams with at least one mark will appear here."
+          />
         </section>
       ) : null}
-      {streams.length === 0 && isLoading ? (
-        <EmptyState title="Loading" />
+      {isLoading ? (
+        <StatusPanel
+          title="Loading history"
+          message="Reading your saved streams and marks."
+          tone="loading"
+        />
       ) : null}
-      {streams.length > 0 ? (
+      {streams.length > 0 && !isLoading ? (
         <div className="history-layout">
           <StreamList
             selectedStreamId={selectedStreamId}
@@ -218,6 +254,7 @@ export function HistoryView() {
           />
           {selectedStream === null ? null : (
             <StreamDetails
+              isLoadingMarks={isLoadingMarks}
               item={selectedStream}
               marks={marks}
               onCopyAllMarks={handleCopyAllMarks}

@@ -4,6 +4,7 @@ import { formatTimestamp } from "../../domain/timeFormat";
 import type { StreamHistoryItem } from "./historyViewModel";
 
 type StreamDetailsProps = {
+  isLoadingMarks: boolean;
   item: StreamHistoryItem;
   marks: TimestampMark[];
   onCopyAllMarks: () => void;
@@ -21,6 +22,7 @@ function formatDateTime(value: string): string {
 }
 
 export function StreamDetails({
+  isLoadingMarks,
   item,
   marks,
   onCopyAllMarks,
@@ -77,8 +79,12 @@ export function StreamDetails({
             </Button>
           </div>
         </div>
-        {marks.length === 0 ? (
-          <p className="empty-state">No marks yet</p>
+        {isLoadingMarks ? (
+          <p className="inline-status" role="status">
+            Loading marks
+          </p>
+        ) : marks.length === 0 ? (
+          <p className="inline-status">No marks yet</p>
         ) : (
           <ul className="mark-list" aria-label="Marks">
             {marks.map((mark) => {

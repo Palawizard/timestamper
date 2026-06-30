@@ -5,6 +5,7 @@ import {
 } from "../features/settings/hotkeyCapture";
 
 type HotkeyInputProps = {
+  disabled?: boolean;
   id: string;
   label: string;
   onCaptureChange?: (isCapturing: boolean) => void;
@@ -14,6 +15,7 @@ type HotkeyInputProps = {
 
 export function HotkeyInput({
   id,
+  disabled = false,
   label,
   onCaptureChange,
   onChange,
@@ -55,6 +57,7 @@ export function HotkeyInput({
       <label htmlFor={id}>{label}</label>
       <input
         id={id}
+        disabled={disabled}
         className={`hotkey-input${isCapturing ? " hotkey-input-capturing" : ""}`}
         type="text"
         value={isCapturing ? preview : value}

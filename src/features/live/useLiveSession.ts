@@ -39,6 +39,7 @@ export type LiveSessionState = {
   errorMessage: string | null;
   hotkeys: Pick<AppSettings, "addMarkHotkey" | "startStopHotkey">;
   lastCompletedSession: StreamSession | null;
+  isSessionTransitionPending: boolean;
   marks: TimestampMark[];
   noticeMessage: string | null;
   status: LiveSessionStatus;
@@ -94,6 +95,8 @@ export function useLiveSession(): UseLiveSessionResult {
   });
   const [hotkeysSuspended, setHotkeysSuspendedState] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSessionTransitionPending, setIsSessionTransitionPending] =
+    useState(false);
   const [lastCompletedSession, setLastCompletedSession] =
     useState<StreamSession | null>(null);
   const [marks, setMarks] = useState<TimestampMark[]>([]);
@@ -103,6 +106,7 @@ export function useLiveSession(): UseLiveSessionResult {
   const hotkeysSuspendedRef = useRef(false);
   const hotkeyRegistrationTaskRef = useRef<Promise<void>>(Promise.resolve());
   const registeredHotkeysRef = useRef<RegisteredHotkeys | null>(null);
+  const sessionTransitionPendingRef = useRef(false);
   const startSessionRef = useRef<() => Promise<void>>(async () => undefined);
   const stopSessionRef = useRef<() => Promise<void>>(async () => undefined);
 
@@ -217,6 +221,13 @@ export function useLiveSession(): UseLiveSessionResult {
   }, [activeSession]);
 
   const startSession = useCallback(async () => {
+    if (sessionTransitionPendingRef.current) {
+      return;
+    }
+
+    sessionTransitionPendingRef.current = true;
+    setIsSessionTransitionPending(true);
+
     try {
       const now = new Date().toISOString();
 
@@ -234,6 +245,9 @@ export function useLiveSession(): UseLiveSessionResult {
     } catch (error) {
       console.error(error);
       setErrorMessage("Could not save stream");
+    } finally {
+      sessionTransitionPendingRef.current = false;
+      setIsSessionTransitionPending(false);
     }
   }, []);
 
@@ -244,6 +258,13 @@ export function useLiveSession(): UseLiveSessionResult {
     if (currentSession === null) {
       return;
     }
+
+    if (sessionTransitionPendingRef.current) {
+      return;
+    }
+
+    sessionTransitionPendingRef.current = true;
+    setIsSessionTransitionPending(true);
 
     try {
       const markCount = await countTimestampMarksForSession(currentSession.id);
@@ -270,6 +291,9 @@ export function useLiveSession(): UseLiveSessionResult {
     } catch (error) {
       console.error(error);
       setErrorMessage("Could not save stream");
+    } finally {
+      sessionTransitionPendingRef.current = false;
+      setIsSessionTransitionPending(false);
     }
   }, [activeSession]);
 
@@ -356,9 +380,7 @@ export function useLiveSession(): UseLiveSessionResult {
         }
 
         if (!isCurrent) {
-          await Promise.allSettled(
-            pendingCleanups.map((cleanup) => cleanup()),
-          );
+          await Promise.allSettled(pendingCleanups.map((cleanup) => cleanup()));
           return;
         }
 
@@ -386,9 +408,7 @@ export function useLiveSession(): UseLiveSessionResult {
       } catch (error) {
         console.error(error);
 
-        await Promise.allSettled(
-          pendingCleanups.map((cleanup) => cleanup()),
-        );
+        await Promise.allSettled(pendingCleanups.map((cleanup) => cleanup()));
 
         if (currentRegistration !== null) {
           setHotkeys({
@@ -426,11 +446,7 @@ export function useLiveSession(): UseLiveSessionResult {
           ]);
         });
     };
-  }, [
-    hotkeys.addMarkHotkey,
-    hotkeys.startStopHotkey,
-    hotkeysSuspended,
-  ]);
+  }, [hotkeys.addMarkHotkey, hotkeys.startStopHotkey, hotkeysSuspended]);
 
   useEffect(() => {
     let isCurrent = true;
@@ -472,6 +488,7 @@ export function useLiveSession(): UseLiveSessionResult {
     elapsedMs,
     errorMessage,
     hotkeys,
+    isSessionTransitionPending,
     lastCompletedSession,
     marks,
     noticeMessage,
