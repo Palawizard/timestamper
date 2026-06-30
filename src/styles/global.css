@@ -611,6 +611,30 @@ ul {
   gap: 16px;
 }
 
+.settings-section-title {
+  display: grid;
+  justify-items: start;
+  gap: 2px;
+}
+
+.obs-help-link {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #255c99;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 650;
+  text-align: left;
+}
+
+.obs-help-link:hover {
+  color: #1e4f85;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .field {
   display: grid;
   gap: 6px;

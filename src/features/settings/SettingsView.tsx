@@ -256,15 +256,19 @@ export function SettingsView() {
           </section>
           <section className="settings-section" aria-labelledby="obs-title">
             <div className="section-header">
-              <h3 id="obs-title">OBS integration</h3>
-              <div className="section-actions">
-                {obsIntegration.enabled && obsIntegration.message !== null ? (
-                  <span>{obsIntegration.message}</span>
-                ) : null}
-                <Button type="button" onClick={() => setIsObsSetupOpen(true)}>
+              <div className="settings-section-title">
+                <h3 id="obs-title">OBS integration</h3>
+                <button
+                  className="obs-help-link"
+                  type="button"
+                  onClick={() => setIsObsSetupOpen(true)}
+                >
                   How to set up OBS
-                </Button>
+                </button>
               </div>
+              {obsIntegration.enabled && obsIntegration.message !== null ? (
+                <span>{obsIntegration.message}</span>
+              ) : null}
             </div>
             <label className="toggle-field" htmlFor="obs-enabled">
               <input
