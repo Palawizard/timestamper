@@ -107,13 +107,13 @@ export function SettingsView() {
             id="start-stop-hotkey"
             label="Start or stop stream"
             value={startStopHotkey}
-            onChange={(event) => setStartStopHotkey(event.target.value)}
+            onChange={setStartStopHotkey}
           />
           <HotkeyInput
             id="add-mark-hotkey"
             label="Add mark"
             value={addMarkHotkey}
-            onChange={(event) => setAddMarkHotkey(event.target.value)}
+            onChange={setAddMarkHotkey}
           />
         </section>
         <div className="toolbar">

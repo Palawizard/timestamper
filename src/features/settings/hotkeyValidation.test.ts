@@ -26,10 +26,13 @@ describe("hotkey validation", () => {
     });
   });
 
-  it("rejects hotkeys without modifiers", () => {
-    expect(validateHotkeys("F9", "Ctrl+Alt+F10")).toEqual({
-      isValid: false,
-      message: "Shortcut needs a modifier",
+  it("accepts hotkeys without modifiers", () => {
+    expect(validateHotkeys("F9", "F10")).toEqual({
+      isValid: true,
+      values: {
+        addMarkHotkey: "F10",
+        startStopHotkey: "F9",
+      },
     });
   });
 

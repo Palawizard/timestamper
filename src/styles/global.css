@@ -317,7 +317,7 @@ ul {
   max-width: 360px;
 }
 
-.field span {
+.field label {
   color: #25313f;
   font-weight: 650;
 }
@@ -330,6 +330,18 @@ ul {
   padding: 8px 10px;
   background: #ffffff;
   color: #25313f;
+  cursor: pointer;
+}
+
+.hotkey-input:focus,
+.hotkey-input-capturing {
+  border-color: #315efb;
+  outline: 3px solid rgba(49, 94, 251, 0.16);
+}
+
+.field-hint {
+  color: #5f6b7a;
+  font-size: 0.78rem;
 }
 
 .form-feedback {
