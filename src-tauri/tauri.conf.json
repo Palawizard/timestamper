@@ -13,8 +13,11 @@
     "windows": [
       {
         "title": "Timestamper",
-        "width": 800,
-        "height": 600
+        "width": 960,
+        "height": 680,
+        "minWidth": 720,
+        "minHeight": 560,
+        "center": true
       }
     ],
     "security": {
@@ -24,6 +27,9 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "category": "Utility",
+    "shortDescription": "Save timestamp marks while you stream.",
+    "longDescription": "Timestamper is a local desktop utility for starting stream timers, saving precise timestamp marks with global shortcuts, and reviewing completed streams.",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
