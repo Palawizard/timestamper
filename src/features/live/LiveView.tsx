@@ -49,6 +49,7 @@ export function LiveView() {
       <div className="toolbar">
         <Button
           variant="primary"
+          className={isRunning ? "button-danger" : ""}
           disabled={status === "loading"}
           onClick={isRunning ? stopSession : startSession}
         >
