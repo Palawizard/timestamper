@@ -1,11 +1,10 @@
 use tauri_plugin_sql::{Migration, MigrationKind};
 
 fn app_migrations() -> Vec<Migration> {
-    vec![
-        Migration {
-            version: 1,
-            description: "create initial timestamp tables",
-            sql: "
+    let initial_migration = Migration {
+        version: 1,
+        description: "create initial timestamp tables",
+        sql: "
             CREATE TABLE IF NOT EXISTS stream_sessions (
                 id TEXT PRIMARY KEY,
                 title TEXT,
@@ -37,9 +36,12 @@ fn app_migrations() -> Vec<Migration> {
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
             );
-            ",
-            kind: MigrationKind::Up,
-        },
+        ",
+        kind: MigrationKind::Up,
+    };
+
+    vec![
+        initial_migration,
         Migration {
             version: 2,
             description: "add obs integration settings",
@@ -80,6 +82,7 @@ pub fn run() {
 #[cfg(test)]
 mod tests {
     use super::app_migrations;
+    use sha2::{Digest, Sha384};
 
     #[test]
     fn keeps_obs_migrations_separate_from_the_initial_schema() {
@@ -87,6 +90,10 @@ mod tests {
 
         assert_eq!(migrations.len(), 3);
         assert_eq!(migrations[0].version, 1);
+        assert_eq!(
+            format!("{:x}", Sha384::digest(migrations[0].sql.as_bytes())),
+            "b85210baa271d94e4fac00aeb93e628f57687995c24c9bb5eaa911811957efd583d4dbf3267f2f461de936c92789f5bb"
+        );
         assert!(!migrations[0].sql.contains("obs_enabled"));
         assert_eq!(migrations[1].version, 2);
         assert!(migrations[1].sql.contains("obs_enabled"));
