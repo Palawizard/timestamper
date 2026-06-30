@@ -1,0 +1,67 @@
+name: Rapport de bug (beta)
+description: Signaler un problème rencontré avec Timestamper beta
+title: "[Beta] "
+labels: ["bug", "beta"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Merci pour votre retour sur la beta. Décrivez le problème de façon observable.
+        N'incluez pas de données sensibles (mot de passe OBS, chemins personnels complets).
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Zone concernée
+      options:
+        - Live (session / timer / marks)
+        - History (liste / export / suppression)
+        - Settings (raccourcis)
+        - OBS integration
+        - Global hotkeys
+        - Installation
+        - Autre
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version installée
+      placeholder: "0.1.0-beta.1"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Étapes pour reproduire
+      placeholder: |
+        1. Démarrer un stream
+        2. Appuyer sur le raccourci add mark
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Comportement attendu
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Comportement observé
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environnement
+      description: Version Windows, OBS si pertinent
+      placeholder: "Windows 11 24H2, OBS 31"
+    validations:
+      required: true
