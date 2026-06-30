@@ -14,6 +14,13 @@ import {
   subscribeToAppSettingsChanges,
 } from "../../services/settingsEvents";
 import { validateHotkeys } from "./hotkeyValidation";
+import {
+  isObsAuthenticationError,
+  testObsConnection,
+} from "../../services/obsClient";
+import { useObsIntegrationContext } from "../obs/obsIntegrationContext";
+import { validateObsSettings } from "./obsSettingsValidation";
+import { ObsSetupDialog } from "./ObsSetupDialog";
 
 type Feedback = {
   message: string;
@@ -25,6 +32,8 @@ export function SettingsView() {
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isTestingObs, setIsTestingObs] = useState(false);
+  const [isObsSetupOpen, setIsObsSetupOpen] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [savedSettings, setSavedSettings] = useState<Awaited<
     ReturnType<typeof getOrCreateAppSettings>
@@ -32,7 +41,13 @@ export function SettingsView() {
   const [startStopHotkey, setStartStopHotkey] = useState(
     DEFAULT_START_STOP_HOTKEY,
   );
+  const [obsEnabled, setObsEnabled] = useState(false);
+  const [obsHost, setObsHost] = useState("127.0.0.1");
+  const [obsPassword, setObsPassword] = useState("");
+  const [obsPort, setObsPort] = useState(4455);
+  const [obsFeedback, setObsFeedback] = useState<Feedback | null>(null);
   const { setHotkeysSuspended } = useLiveSessionContext();
+  const obsIntegration = useObsIntegrationContext();
 
   useEffect(() => {
     return () => setHotkeysSuspended(false);
@@ -51,6 +66,10 @@ export function SettingsView() {
           setSavedSettings(settings);
           setAddMarkHotkey(settings.addMarkHotkey);
           setStartStopHotkey(settings.startStopHotkey);
+          setObsEnabled(settings.obsEnabled);
+          setObsHost(settings.obsHost);
+          setObsPassword(settings.obsPassword);
+          setObsPort(settings.obsPort);
           setFeedback(null);
         }
       } catch (error) {
@@ -79,6 +98,10 @@ export function SettingsView() {
       setSavedSettings(settings);
       setAddMarkHotkey(settings.addMarkHotkey);
       setStartStopHotkey(settings.startStopHotkey);
+      setObsEnabled(settings.obsEnabled);
+      setObsHost(settings.obsHost);
+      setObsPassword(settings.obsPassword);
+      setObsPort(settings.obsPort);
     });
   }, []);
 
@@ -96,6 +119,18 @@ export function SettingsView() {
       return;
     }
 
+    const obsValidation = validateObsSettings(
+      obsEnabled,
+      obsHost,
+      obsPort,
+      obsPassword,
+    );
+
+    if (!obsValidation.isValid) {
+      setFeedback({ message: obsValidation.message, tone: "error" });
+      return;
+    }
+
     try {
       setIsSaving(true);
       const now = new Date().toISOString();
@@ -103,6 +138,10 @@ export function SettingsView() {
         ...(savedSettings ?? (await getOrCreateAppSettings())),
         addMarkHotkey: validation.values.addMarkHotkey,
         startStopHotkey: validation.values.startStopHotkey,
+        obsEnabled: obsValidation.values.enabled,
+        obsHost: obsValidation.values.host,
+        obsPassword: obsValidation.values.password,
+        obsPort: obsValidation.values.port,
         updatedAt: now,
       };
 
@@ -111,7 +150,7 @@ export function SettingsView() {
       setSavedSettings(nextSettings);
       setAddMarkHotkey(nextSettings.addMarkHotkey);
       setStartStopHotkey(nextSettings.startStopHotkey);
-      setFeedback({ message: "Shortcut saved", tone: "success" });
+      setFeedback({ message: "Settings saved", tone: "success" });
     } catch (error) {
       console.error(error);
       setFeedback({ message: "Could not save settings", tone: "error" });
@@ -127,7 +166,46 @@ export function SettingsView() {
 
     setAddMarkHotkey(savedSettings.addMarkHotkey);
     setStartStopHotkey(savedSettings.startStopHotkey);
+    setObsEnabled(savedSettings.obsEnabled);
+    setObsHost(savedSettings.obsHost);
+    setObsPassword(savedSettings.obsPassword);
+    setObsPort(savedSettings.obsPort);
+    setObsFeedback(null);
     setFeedback(null);
+  }
+
+  async function handleTestObsConnection() {
+    if (isTestingObs) {
+      return;
+    }
+
+    const validation = validateObsSettings(true, obsHost, obsPort, obsPassword);
+
+    if (!validation.isValid) {
+      setObsFeedback({ message: validation.message, tone: "error" });
+      return;
+    }
+
+    setIsTestingObs(true);
+    setObsFeedback(null);
+
+    try {
+      await testObsConnection({
+        host: validation.values.host,
+        password: validation.values.password,
+        port: validation.values.port,
+      });
+      setObsFeedback({ message: "OBS connected", tone: "success" });
+    } catch (error) {
+      setObsFeedback({
+        message: isObsAuthenticationError(error)
+          ? "Authentication failed"
+          : "Could not connect to OBS",
+        tone: "error",
+      });
+    } finally {
+      setIsTestingObs(false);
+    }
   }
 
   return (
@@ -176,6 +254,90 @@ export function SettingsView() {
               onChange={setAddMarkHotkey}
             />
           </section>
+          <section className="settings-section" aria-labelledby="obs-title">
+            <div className="section-header">
+              <div className="settings-section-title">
+                <h3 id="obs-title">OBS integration</h3>
+                <button
+                  className="obs-help-link"
+                  type="button"
+                  onClick={() => setIsObsSetupOpen(true)}
+                >
+                  How to set up OBS
+                </button>
+              </div>
+              {obsIntegration.enabled && obsIntegration.message !== null ? (
+                <span>{obsIntegration.message}</span>
+              ) : null}
+            </div>
+            <label className="toggle-field" htmlFor="obs-enabled">
+              <input
+                id="obs-enabled"
+                type="checkbox"
+                checked={obsEnabled}
+                disabled={isSaving || isTestingObs}
+                onChange={(event) => setObsEnabled(event.target.checked)}
+              />
+              <span>Enable OBS integration</span>
+            </label>
+            <div className="field">
+              <label htmlFor="obs-host">Host</label>
+              <input
+                id="obs-host"
+                value={obsHost}
+                disabled={isSaving || isTestingObs || !obsEnabled}
+                onChange={(event) => setObsHost(event.target.value)}
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="obs-port">Port</label>
+              <input
+                id="obs-port"
+                type="number"
+                min="1"
+                max="65535"
+                value={obsPort}
+                disabled={isSaving || isTestingObs || !obsEnabled}
+                onChange={(event) => setObsPort(event.target.valueAsNumber)}
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="obs-password">Password</label>
+              <input
+                id="obs-password"
+                type="password"
+                autoComplete="off"
+                value={obsPassword}
+                disabled={isSaving || isTestingObs || !obsEnabled}
+                onChange={(event) => setObsPassword(event.target.value)}
+              />
+            </div>
+            <div className="toolbar">
+              <Button
+                type="button"
+                disabled={isSaving || isTestingObs || !obsEnabled}
+                onClick={handleTestObsConnection}
+              >
+                {isTestingObs ? "Testing..." : "Test connection"}
+              </Button>
+              {obsIntegration.enabled &&
+              (obsIntegration.state === "disconnected" ||
+                obsIntegration.state === "authentication-failed" ||
+                obsIntegration.state === "error") ? (
+                <Button type="button" onClick={obsIntegration.retry}>
+                  Retry
+                </Button>
+              ) : null}
+            </div>
+            {obsFeedback === null ? null : (
+              <p
+                className={`form-feedback form-feedback-${obsFeedback.tone}`}
+                role={obsFeedback.tone === "error" ? "alert" : "status"}
+              >
+                {obsFeedback.message}
+              </p>
+            )}
+          </section>
           <div className="toolbar">
             <Button type="submit" variant="primary" disabled={isSaving}>
               {isSaving ? "Saving..." : "Save"}
@@ -194,6 +356,10 @@ export function SettingsView() {
           )}
         </form>
       )}
+      <ObsSetupDialog
+        onClose={() => setIsObsSetupOpen(false)}
+        open={isObsSetupOpen}
+      />
     </section>
   );
 }

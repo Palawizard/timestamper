@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AppSettings } from "../../domain/settings";
-import type { StreamSession } from "../../domain/streamSession";
+import type {
+  StreamSession,
+  StreamSessionControlSource,
+} from "../../domain/streamSession";
 import type { TimestampMark } from "../../domain/timestampMark";
 import { calculateElapsedMs } from "../../domain/timeDuration";
 import {
@@ -19,6 +22,7 @@ import {
   getOrCreateAppSettings,
 } from "../../services/settingsRepository";
 import { subscribeToAppSettingsChanges } from "../../services/settingsEvents";
+import { SerialTaskQueue } from "../../services/serialTaskQueue";
 import {
   deleteStreamSession,
   getActiveStreamSession,
@@ -47,9 +51,13 @@ export type LiveSessionState = {
 
 export type UseLiveSessionResult = LiveSessionState & {
   addMark: () => Promise<void>;
+  adoptSessionForObs: () => Promise<void>;
+  onManualSessionStop: (listener: () => void) => () => void;
   setHotkeysSuspended: (isSuspended: boolean) => void;
   startSession: () => Promise<void>;
+  startSessionFromObs: (startedAt: string) => Promise<void>;
   stopSession: () => Promise<void>;
+  stopSessionFromObs: (showReconciliationNotice?: boolean) => Promise<void>;
 };
 
 type RegisteredHotkeys = Pick<
@@ -106,13 +114,46 @@ export function useLiveSession(): UseLiveSessionResult {
   const hotkeysSuspendedRef = useRef(false);
   const hotkeyRegistrationTaskRef = useRef<Promise<void>>(Promise.resolve());
   const registeredHotkeysRef = useRef<RegisteredHotkeys | null>(null);
-  const sessionTransitionPendingRef = useRef(false);
+  const commandQueueRef = useRef(new SerialTaskQueue());
+  const pendingCommandCountRef = useRef(0);
+  const manualStopListenersRef = useRef(new Set<() => void>());
   const startSessionRef = useRef<() => Promise<void>>(async () => undefined);
   const stopSessionRef = useRef<() => Promise<void>>(async () => undefined);
 
   useEffect(() => {
     activeSessionRef.current = activeSession;
   }, [activeSession]);
+
+  const setCurrentActiveSession = useCallback(
+    (session: StreamSession | null) => {
+      activeSessionRef.current = session;
+      setActiveSession(session);
+    },
+    [],
+  );
+
+  const enqueueCommand = useCallback(
+    (command: () => Promise<void>, trackTransition = true) => {
+      if (trackTransition) {
+        pendingCommandCountRef.current += 1;
+        setIsSessionTransitionPending(true);
+      }
+
+      const run = async () => {
+        try {
+          await command();
+        } finally {
+          if (trackTransition) {
+            pendingCommandCountRef.current -= 1;
+            setIsSessionTransitionPending(pendingCommandCountRef.current > 0);
+          }
+        }
+      };
+
+      return commandQueueRef.current.enqueue(run);
+    },
+    [],
+  );
 
   const setHotkeysSuspended = useCallback((isSuspended: boolean) => {
     hotkeysSuspendedRef.current = isSuspended;
@@ -138,7 +179,7 @@ export function useLiveSession(): UseLiveSessionResult {
           return;
         }
 
-        setActiveSession(recoveredSession);
+        setCurrentActiveSession(recoveredSession);
         setElapsedMs(
           recoveredSession === null
             ? 0
@@ -166,7 +207,7 @@ export function useLiveSession(): UseLiveSessionResult {
     return () => {
       isCurrent = false;
     };
-  }, []);
+  }, [setCurrentActiveSession]);
 
   useEffect(() => {
     return subscribeToAppSettingsChanges((settings) => {
@@ -220,103 +261,185 @@ export function useLiveSession(): UseLiveSessionResult {
     return () => window.clearInterval(intervalId);
   }, [activeSession]);
 
-  const startSession = useCallback(async () => {
-    if (sessionTransitionPendingRef.current) {
-      return;
-    }
+  const performStartSession = useCallback(
+    async (controlSource: StreamSessionControlSource, startedAt: string) => {
+      try {
+        if (activeSessionRef.current !== null) {
+          return;
+        }
 
-    sessionTransitionPendingRef.current = true;
-    setIsSessionTransitionPending(true);
+        await completeStaleActiveSessions(null);
 
-    try {
-      const now = new Date().toISOString();
+        const session = createStreamSession(
+          startedAt,
+          crypto.randomUUID.bind(crypto),
+          controlSource,
+        );
 
-      await completeStaleActiveSessions(null);
-
-      const session = createStreamSession(now);
-
-      await saveStreamSession(session);
-      setActiveSession(session);
-      setElapsedMs(0);
-      setErrorMessage(null);
-      setLastCompletedSession(null);
-      setMarks([]);
-      setNoticeMessage(null);
-    } catch (error) {
-      console.error(error);
-      setErrorMessage("Could not save stream");
-    } finally {
-      sessionTransitionPendingRef.current = false;
-      setIsSessionTransitionPending(false);
-    }
-  }, []);
-
-  const stopSession = useCallback(async () => {
-    const now = new Date().toISOString();
-    const currentSession = activeSession;
-
-    if (currentSession === null) {
-      return;
-    }
-
-    if (sessionTransitionPendingRef.current) {
-      return;
-    }
-
-    sessionTransitionPendingRef.current = true;
-    setIsSessionTransitionPending(true);
-
-    try {
-      const markCount = await countTimestampMarksForSession(currentSession.id);
-
-      if (markCount === 0) {
-        await deleteStreamSession(currentSession.id);
-        setLastCompletedSession(null);
-        setElapsedMs(0);
+        await saveStreamSession(session);
+        setCurrentActiveSession(session);
+        setElapsedMs(calculateElapsedMs(Date.parse(startedAt), Date.now()));
         setErrorMessage(null);
-        setActiveSession(null);
+        setLastCompletedSession(null);
         setMarks([]);
-        setNoticeMessage("Stream not saved because no marks were added");
+        setNoticeMessage(null);
+      } catch (error) {
+        console.error(error);
+        setErrorMessage("Could not save stream");
+      }
+    },
+    [setCurrentActiveSession],
+  );
+
+  const startSession = useCallback(
+    () =>
+      enqueueCommand(() =>
+        performStartSession("manual", new Date().toISOString()),
+      ),
+    [enqueueCommand, performStartSession],
+  );
+
+  const startSessionFromObs = useCallback(
+    (startedAt: string) =>
+      enqueueCommand(() => performStartSession("obs", startedAt)),
+    [enqueueCommand, performStartSession],
+  );
+
+  const adoptSessionForObs = useCallback(
+    () =>
+      enqueueCommand(async () => {
+        const currentSession = activeSessionRef.current;
+
+        if (currentSession === null || currentSession.controlSource === "obs") {
+          return;
+        }
+
+        try {
+          const adoptedSession = {
+            ...currentSession,
+            controlSource: "obs" as const,
+            updatedAt: new Date().toISOString(),
+          };
+          await saveStreamSession(adoptedSession);
+          setCurrentActiveSession(adoptedSession);
+          setErrorMessage(null);
+          setNoticeMessage("Current stream connected to OBS");
+        } catch (error) {
+          console.error(error);
+          setErrorMessage("Could not update stream");
+        }
+      }),
+    [enqueueCommand, setCurrentActiveSession],
+  );
+
+  const performStopSession = useCallback(
+    async (
+      source: StreamSessionControlSource,
+      showReconciliationNotice = false,
+    ) => {
+      const now = new Date().toISOString();
+      const currentSession = activeSessionRef.current;
+
+      if (
+        currentSession === null ||
+        (source === "obs" && currentSession.controlSource !== "obs")
+      ) {
         return;
       }
 
-      const completedSession = completeStreamSession(currentSession, now);
+      try {
+        const markCount = await countTimestampMarksForSession(
+          currentSession.id,
+        );
 
-      await saveStreamSession(completedSession);
-      setLastCompletedSession(completedSession);
-      setElapsedMs(0);
-      setErrorMessage(null);
-      setActiveSession(null);
-      setNoticeMessage(null);
-    } catch (error) {
-      console.error(error);
-      setErrorMessage("Could not save stream");
-    } finally {
-      sessionTransitionPendingRef.current = false;
-      setIsSessionTransitionPending(false);
-    }
-  }, [activeSession]);
+        if (markCount === 0) {
+          await deleteStreamSession(currentSession.id);
+          setLastCompletedSession(null);
+          setElapsedMs(0);
+          setErrorMessage(null);
+          setCurrentActiveSession(null);
+          setMarks([]);
+          setNoticeMessage(
+            showReconciliationNotice
+              ? "OBS stopped while disconnected. The exact stop time was unavailable"
+              : "Stream not saved because no marks were added",
+          );
 
-  const addMark = useCallback(async () => {
-    const currentSession = activeSession;
+          if (source === "manual") {
+            for (const listener of manualStopListenersRef.current) {
+              listener();
+            }
+          }
 
-    if (currentSession === null) {
-      setErrorMessage("Start a stream first");
-      return;
-    }
+          return;
+        }
 
-    const now = new Date().toISOString();
-    const mark = createTimestampMark(currentSession, now);
+        const completedSession = completeStreamSession(currentSession, now);
 
-    try {
-      await saveTimestampMark(mark);
-      setMarks((currentMarks) => [...currentMarks, mark]);
-      setErrorMessage(null);
-    } catch (error) {
-      console.error(error);
-      setErrorMessage("Could not save mark");
-    }
-  }, [activeSession]);
+        await saveStreamSession(completedSession);
+        setLastCompletedSession(completedSession);
+        setElapsedMs(0);
+        setErrorMessage(null);
+        setCurrentActiveSession(null);
+        setNoticeMessage(
+          showReconciliationNotice
+            ? "OBS stopped while disconnected. The exact stop time was unavailable"
+            : null,
+        );
+
+        if (source === "manual") {
+          for (const listener of manualStopListenersRef.current) {
+            listener();
+          }
+        }
+      } catch (error) {
+        console.error(error);
+        setErrorMessage("Could not save stream");
+      }
+    },
+    [setCurrentActiveSession],
+  );
+
+  const stopSession = useCallback(
+    () => enqueueCommand(() => performStopSession("manual")),
+    [enqueueCommand, performStopSession],
+  );
+
+  const stopSessionFromObs = useCallback(
+    (showReconciliationNotice = false) =>
+      enqueueCommand(() => performStopSession("obs", showReconciliationNotice)),
+    [enqueueCommand, performStopSession],
+  );
+
+  const onManualSessionStop = useCallback((listener: () => void) => {
+    manualStopListenersRef.current.add(listener);
+    return () => manualStopListenersRef.current.delete(listener);
+  }, []);
+
+  const addMark = useCallback(
+    () =>
+      enqueueCommand(async () => {
+        const currentSession = activeSessionRef.current;
+
+        if (currentSession === null) {
+          setErrorMessage("Start a stream first");
+          return;
+        }
+
+        const now = new Date().toISOString();
+        const mark = createTimestampMark(currentSession, now);
+
+        try {
+          await saveTimestampMark(mark);
+          setMarks((currentMarks) => [...currentMarks, mark]);
+          setErrorMessage(null);
+        } catch (error) {
+          console.error(error);
+          setErrorMessage("Could not save mark");
+        }
+      }, false),
+    [enqueueCommand],
+  );
 
   useEffect(() => {
     addMarkRef.current = addMark;
@@ -485,6 +608,7 @@ export function useLiveSession(): UseLiveSessionResult {
   return {
     addMark,
     activeSession,
+    adoptSessionForObs,
     elapsedMs,
     errorMessage,
     hotkeys,
@@ -492,6 +616,7 @@ export function useLiveSession(): UseLiveSessionResult {
     lastCompletedSession,
     marks,
     noticeMessage,
+    onManualSessionStop,
     setHotkeysSuspended,
     status:
       errorMessage !== null
@@ -502,6 +627,8 @@ export function useLiveSession(): UseLiveSessionResult {
             ? "ready"
             : "running",
     startSession,
+    startSessionFromObs,
     stopSession,
+    stopSessionFromObs,
   };
 }

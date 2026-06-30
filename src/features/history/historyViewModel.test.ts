@@ -12,6 +12,7 @@ const completedStream: StreamSession = {
   endedAt: "2026-06-01T20:05:02.000Z",
   durationMs: 3_902_000,
   status: "completed",
+  controlSource: "manual",
   createdAt: "2026-06-01T19:00:00.000Z",
   updatedAt: "2026-06-01T20:05:02.000Z",
 };

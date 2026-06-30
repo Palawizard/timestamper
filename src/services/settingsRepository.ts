@@ -7,6 +7,10 @@ type AppSettingsRow = {
   start_stop_hotkey: string;
   add_mark_hotkey: string;
   timestamp_format: string;
+  obs_enabled: number;
+  obs_host: string;
+  obs_port: number;
+  obs_password: string;
   created_at: string;
   updated_at: string;
 };
@@ -15,12 +19,18 @@ export const DEFAULT_SETTINGS_ID = "default";
 export const DEFAULT_START_STOP_HOTKEY = "Ctrl+Alt+F9";
 export const DEFAULT_ADD_MARK_HOTKEY = "Ctrl+Alt+F10";
 export const DEFAULT_TIMESTAMP_FORMAT: TimestampFormat = "hh:mm:ss";
+export const DEFAULT_OBS_HOST = "127.0.0.1";
+export const DEFAULT_OBS_PORT = 4455;
 
 const APP_SETTINGS_COLUMNS = `
   id,
   start_stop_hotkey,
   add_mark_hotkey,
   timestamp_format,
+  obs_enabled,
+  obs_host,
+  obs_port,
+  obs_password,
   created_at,
   updated_at
 `;
@@ -34,6 +44,10 @@ export function createDefaultAppSettings(now: string): AppSettings {
     startStopHotkey: DEFAULT_START_STOP_HOTKEY,
     addMarkHotkey: DEFAULT_ADD_MARK_HOTKEY,
     timestampFormat: DEFAULT_TIMESTAMP_FORMAT,
+    obsEnabled: false,
+    obsHost: DEFAULT_OBS_HOST,
+    obsPort: DEFAULT_OBS_PORT,
+    obsPassword: "",
     createdAt: now,
     updatedAt: now,
   };
@@ -48,6 +62,10 @@ export function mapAppSettingsRow(row: AppSettingsRow): AppSettings {
     startStopHotkey: row.start_stop_hotkey,
     addMarkHotkey: row.add_mark_hotkey,
     timestampFormat: row.timestamp_format,
+    obsEnabled: row.obs_enabled === 1,
+    obsHost: row.obs_host,
+    obsPort: row.obs_port,
+    obsPassword: row.obs_password,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -70,14 +88,22 @@ export async function saveAppSettings(
         start_stop_hotkey,
         add_mark_hotkey,
         timestamp_format,
+        obs_enabled,
+        obs_host,
+        obs_port,
+        obs_password,
         created_at,
         updated_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       ON CONFLICT(id) DO UPDATE SET
         start_stop_hotkey = excluded.start_stop_hotkey,
         add_mark_hotkey = excluded.add_mark_hotkey,
         timestamp_format = excluded.timestamp_format,
+        obs_enabled = excluded.obs_enabled,
+        obs_host = excluded.obs_host,
+        obs_port = excluded.obs_port,
+        obs_password = excluded.obs_password,
         updated_at = excluded.updated_at
     `,
     [
@@ -85,6 +111,10 @@ export async function saveAppSettings(
       settings.startStopHotkey,
       settings.addMarkHotkey,
       settings.timestampFormat,
+      settings.obsEnabled ? 1 : 0,
+      settings.obsHost,
+      settings.obsPort,
+      settings.obsPassword,
       settings.createdAt,
       settings.updatedAt,
     ],

@@ -3,6 +3,7 @@ import { EmptyState } from "../../components/EmptyState";
 import { TimerDisplay } from "../../components/TimerDisplay";
 import { formatTimestamp } from "../../domain/timeFormat";
 import { useLiveSessionContext } from "./liveSessionContext";
+import { useObsIntegrationContext } from "../obs/obsIntegrationContext";
 
 export function LiveView() {
   const {
@@ -18,6 +19,7 @@ export function LiveView() {
     startSession,
     stopSession,
   } = useLiveSessionContext();
+  const obsIntegration = useObsIntegrationContext();
   const isRunning = activeSession !== null;
   const markEmptyTitle = isRunning
     ? "No marks yet"
@@ -44,6 +46,25 @@ export function LiveView() {
                 : (noticeMessage ?? "Ready")}
         </p>
       </div>
+      {obsIntegration.enabled && obsIntegration.message !== null ? (
+        <div
+          className={`obs-status obs-status-${obsIntegration.state}`}
+          role="status"
+        >
+          <div className="obs-status-copy">
+            <span className="obs-status-dot" aria-hidden="true" />
+            <div>
+              <strong>OBS integration</strong>
+              <span>{obsIntegration.message}</span>
+            </div>
+          </div>
+          {obsIntegration.state === "disconnected" ||
+          obsIntegration.state === "authentication-failed" ||
+          obsIntegration.state === "error" ? (
+            <Button onClick={obsIntegration.retry}>Retry</Button>
+          ) : null}
+        </div>
+      ) : null}
       <dl className="hotkey-list" aria-label="Current hotkeys">
         <div>
           <dt>Start or stop</dt>

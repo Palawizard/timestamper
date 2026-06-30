@@ -16,6 +16,7 @@ describe("live session lifecycle", () => {
       endedAt: null,
       durationMs: null,
       status: "active",
+      controlSource: "manual",
       createdAt: "2026-06-01T19:00:00.000Z",
       updatedAt: "2026-06-01T19:00:00.000Z",
     });

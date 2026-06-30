@@ -1,4 +1,7 @@
-import type { StreamSession } from "../../domain/streamSession";
+import type {
+  StreamSession,
+  StreamSessionControlSource,
+} from "../../domain/streamSession";
 import type { TimestampMark } from "../../domain/timestampMark";
 import {
   calculateDurationMs,
@@ -10,6 +13,7 @@ export type IdGenerator = () => string;
 export function createStreamSession(
   now: string,
   generateId: IdGenerator = crypto.randomUUID.bind(crypto),
+  controlSource: StreamSessionControlSource = "manual",
 ): StreamSession {
   return {
     id: generateId(),
@@ -18,6 +22,7 @@ export function createStreamSession(
     endedAt: null,
     durationMs: null,
     status: "active",
+    controlSource,
     createdAt: now,
     updatedAt: now,
   };
