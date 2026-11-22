@@ -32,7 +32,7 @@ Format:
 type(scope): thing done
 ```
 
-- Subject line only — no body unless requested
+- Subject line only, no body unless requested
 - Types: `feat`, `fix`, `chore`, `refactor`, `docs`, `test`, `style`, `ci`
 - One logical change per commit
 

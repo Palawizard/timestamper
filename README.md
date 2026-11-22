@@ -17,63 +17,63 @@
 
 ---
 
-## ◆ Features
+## Features
 
 <table>
 <tr>
 <td width="50%">
 
-### » Live session
+### Live session
 
-- **Stream timer** — starts at zero when the session begins
-- **Instant marking** — saves elapsed time since stream start
-- **Global shortcuts** — start/stop and add mark from any app
-- **Current marks list** — immediate display with `HH:MM:SS` timestamps
-- **Empty streams skipped** — sessions without marks are not saved to history
+- Stream timer: starts at zero when the session begins
+- Instant marking: saves elapsed time since stream start
+- Global shortcuts: start/stop and add mark from any app
+- Current marks list: immediate display with `HH:MM:SS` timestamps
+- Empty streams skipped: sessions without marks are not saved to history
 
 </td>
 <td width="50%">
 
-### » History and export
+### History and export
 
-- **Completed streams** — date, start time, duration, and mark count
-- **Stream details** — full list of saved timestamps
-- **Copy** — one timestamp or all marks as plain text
-- **Export** — CSV and JSON per stream
-- **Delete** — confirmation before permanent removal
+- Completed streams: date, start time, duration, and mark count
+- Stream details: full list of saved timestamps
+- Copy: one timestamp or all marks as plain text
+- Export: CSV and JSON per stream
+- Delete: confirmation before permanent removal
 
 </td>
 </tr>
 <tr>
 <td>
 
-### » Settings and OBS
+### Settings and OBS
 
-- **Configurable shortcuts** — built-in keyboard capture in Settings
-- **Validation** — invalid shortcuts do not replace the previous working config
-- **Optional OBS integration** — start/stop sync via WebSocket 5.x
-- **Built-in OBS guide** — connection steps from the Settings screen
-- **Reconnect** — automatic recovery after temporary disconnects
+- Configurable shortcuts: built-in keyboard capture in Settings
+- Validation: invalid shortcuts do not replace the previous working config
+- Optional OBS integration: start/stop sync via WebSocket 5.x
+- Built-in OBS guide: connection steps from the Settings screen
+- Reconnect: automatic recovery after temporary disconnects
 
 </td>
 <td>
 
-### » Experience
+### Experience
 
-- **English UI** — navigation via `Live`, `History`, and `Settings`
-- **Local storage** — SQLite in the Tauri app data folder
-- **Offline** — no account, cloud, or telemetry
-- **Lightweight app** — Tauri 2 shell without a full embedded browser
+- English UI: navigation via `Live`, `History`, and `Settings`
+- Local storage: SQLite in the Tauri app data folder
+- Offline: no account, cloud, or telemetry
+- Lightweight app: Tauri 2 shell without a full embedded browser
 
 </td>
 </tr>
 <tr>
 <td colspan="2">
 
-### » Known limitations (beta)
+### Known limitations (beta)
 
-- Windows 10 and 11 only — no macOS or Linux in this release
-- **Unsigned installer** — SmartScreen may ask for extra confirmation
+- Windows 10 and 11 only, no macOS or Linux in this release
+- Unsigned installer: SmartScreen may ask for extra confirmation
 - Global shortcuts may require system permissions depending on Windows setup
 - OBS must expose its WebSocket server; Timestamper **never sends commands** to OBS
 - No Twitch API, VOD detection, cloud sync, or auto-update
@@ -84,7 +84,7 @@
 
 ---
 
-## ◆ Download
+## Download
 
 Releases are published on [GitHub Releases](https://github.com/Palawizard/timestamper/releases).
 
@@ -93,13 +93,13 @@ Releases are published on [GitHub Releases](https://github.com/Palawizard/timest
 | `Timestamper_*_x64-setup.exe` | NSIS Windows installer (per-user)       |
 | `release-checksums.txt`       | SHA-256 checksums for release artifacts |
 
-> This beta ships the NSIS installer only — WiX/MSI does not accept the `beta` version suffix yet.
+> This beta ships the NSIS installer only. WiX/MSI does not accept the `beta` version suffix yet.
 
 **Runtime requirement:** Microsoft Edge WebView2 (installed automatically by the installer when needed).
 
 ---
 
-## ▶ Quick start
+## Quick start
 
 ### Prerequisites (development)
 
@@ -122,7 +122,7 @@ pnpm install
 pnpm tauri dev
 ```
 
-> `pnpm dev` runs Vite only without the Tauri runtime — frontend-only use.
+> `pnpm dev` runs Vite only without the Tauri runtime: frontend-only use.
 
 ### Verify the project
 
@@ -162,7 +162,7 @@ Timestamper observes OBS stream state; it does not start or stop OBS.
 
 ---
 
-## ◆ Useful scripts
+## Useful scripts
 
 <div align="center">
 
@@ -182,7 +182,7 @@ Timestamper observes OBS stream state; it does not start or stop OBS.
 
 ---
 
-## ◆ Architecture
+## Architecture
 
 ```
 timestamper/
@@ -215,7 +215,7 @@ Start stream → Timer (elapsed ms) → Add mark (offset ms) → Stop stream
 
 ---
 
-## ◆ Tech stack
+## Tech stack
 
 <div align="center">
 
@@ -240,19 +240,19 @@ Start stream → Timer (elapsed ms) → Add mark (offset ms) → Stop stream
 
 ---
 
-## ◆ Security and privacy
+## Security and privacy
 
-- **Local app** — no telemetry or account
-- **Limited Tauri capabilities** — SQL, global shortcuts, and desktop runtime only
+- Local app: no telemetry or account
+- Limited Tauri capabilities: SQL, global shortcuts, and desktop runtime only
 - OBS password stored **locally** in SQLite
-- Timestamper **does not send commands** to OBS — observation only
-- **Per-user installer** — no admin elevation by default
+- Timestamper **does not send commands** to OBS, observation only
+- Per-user installer: no admin elevation by default
 
 See [SECURITY.md](SECURITY.md) to report a vulnerability.
 
 ---
 
-## ◆ Verification
+## Verification
 
 ```powershell
 pnpm format:check
@@ -266,7 +266,7 @@ pnpm tauri build
 
 ---
 
-## ◆ Contributing and releases
+## Contributing and releases
 
 - Integration branch: `dev`
 - Commits: `type(scope): thing done` (English, no body)
@@ -276,7 +276,7 @@ pnpm tauri build
 
 ---
 
-## ◆ License
+## License
 
 Distributed under the [MIT](LICENSE) license.
 
