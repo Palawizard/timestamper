@@ -15,8 +15,6 @@
 
 </div>
 
----
-
 ## Features
 
 <table>
@@ -82,8 +80,6 @@
 </tr>
 </table>
 
----
-
 ## Download
 
 Releases are published on [GitHub Releases](https://github.com/Palawizard/timestamper/releases).
@@ -96,8 +92,6 @@ Releases are published on [GitHub Releases](https://github.com/Palawizard/timest
 > This beta ships the NSIS installer only. WiX/MSI does not accept the `beta` version suffix yet.
 
 **Runtime requirement:** Microsoft Edge WebView2 (installed automatically by the installer when needed).
-
----
 
 ## Quick start
 
@@ -160,8 +154,6 @@ Change them in **Settings** → **Save**.
 
 Timestamper observes OBS stream state; it does not start or stop OBS.
 
----
-
 ## Useful scripts
 
 <div align="center">
@@ -179,8 +171,6 @@ Timestamper observes OBS stream state; it does not start or stop OBS.
 | `pnpm tauri build`  | Production build + Windows installers |
 
 </div>
-
----
 
 ## Architecture
 
@@ -213,8 +203,6 @@ Start stream → Timer (elapsed ms) → Add mark (offset ms) → Stop stream
 
 `useLiveSession` stays mounted at App level via `LiveSessionProvider` so global shortcuts survive view changes.
 
----
-
 ## Tech stack
 
 <div align="center">
@@ -238,8 +226,6 @@ Start stream → Timer (elapsed ms) → Add mark (offset ms) → Stop stream
 - → Lightweight installer with minimal Tauri permissions
 - → Fast web UI iteration without shipping full Chromium
 
----
-
 ## Security and privacy
 
 - Local app: no telemetry or account
@@ -249,8 +235,6 @@ Start stream → Timer (elapsed ms) → Add mark (offset ms) → Stop stream
 - Per-user installer: no admin elevation by default
 
 See [SECURITY.md](SECURITY.md) to report a vulnerability.
-
----
 
 ## Verification
 
@@ -264,8 +248,6 @@ pnpm tauri build
 
 > Global shortcuts and the installer on a clean machine must be validated manually.
 
----
-
 ## Contributing and releases
 
 - Integration branch: `dev`
@@ -274,13 +256,9 @@ pnpm tauri build
 - Changelog: see [CHANGELOG.md](CHANGELOG.md)
 - Contributor guide: [CONTRIBUTING.md](CONTRIBUTING.md)
 
----
-
 ## License
 
 Distributed under the [MIT](LICENSE) license.
-
----
 
 <div align="center">
 
