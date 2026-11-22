@@ -11,7 +11,7 @@
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Windows_10%2F11-0078D4?style=for-the-badge&logo=windows)](https://www.microsoft.com/windows)
 
-[Features](#-features) • [Download](#-download) • [Quick start](#-quick-start) • [Architecture](#-architecture) • [Verification](#-verification)
+[Features](#features) • [Download](#download) • [Quick start](#quick-start) • [Architecture](#architecture) • [Verification](#verification)
 
 </div>
 
